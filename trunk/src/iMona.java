@@ -3979,7 +3979,7 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 		if((mode == 2 || mode == 12) && st > 0){
 			//現在見てるレスの中にジャンプ先があるとき
 			i_length = CacheTitle.length - 1;
-			for(i = i_length;i >= 0;i--){	//キャッシュ内の検索
+			for(i = i_length - 1;i >= 0;i--){	//キャッシュ内の検索
 //				#ifdef DEBUG
 //				System.out.println("CACHE:check" + i + "/" + CacheTitle.length + " /br" + nCacheBrd[i] + "/st" + nCacheSt[i] + "/to" + nCacheTo[i]);
 //				#endif
@@ -4161,6 +4161,8 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 					} else if(st < 0){//最新レス
 						if(to == 0){to = data[1];}
 						//strdata[5] = strdata[5] + "&c=l" + to;
+						sbuf.append("&c=l");
+						sbuf.append(to);
 					}
 				} else {	//スレ検索
 					//strdata[5] = strdata[5] + "&m=s&b=" + brd + "&w=" + strdata[6];

@@ -3,7 +3,7 @@ MIDlet-Vendor: zuzu
 MIDlet-Version: 1.0.0
 MIDlet-1: iMona@zuzu, , iMona
 MIDlet-Jar-URL: iMona_Zuzu.jar
-MIDlet-Jar-Size: 64043
+MIDlet-Jar-Size: 127889
 MIDlet-Application-Range: 0,0
 MIDlet-Copyright: Y
 MIDlet-Data-Size: 40000
@@ -15,8 +15,8 @@ MIDlet-X-AllowURL-2: http://news6.2ch.net/
 MIDlet-X-AllowURL-3: http://imona.zive.net/
 MIDlet-X-Copyright: ON
 MIDlet-X-Storage-Size: 40000
+MIDxlet-API: JSCL-1.2.0
 MIDxlet-Application-Security: Y
 MIDxlet-Network: Y
 MIDxlet-ScreenSize: 0,0
 MIxDlet-Aux: Y
-MIDxlet-API: JSCL-1.4.2
