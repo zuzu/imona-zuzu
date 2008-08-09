@@ -31,14 +31,15 @@ import com.jblend.io.InflateInputStream;
 import com.jblend.micro.lcdui.LocalizedTextBox;
 import com.jblend.micro.lcdui.LocalizedTextField;
 
-/** {@literal iMona@zuzu}
+/** iMona@zuzu
  * @author zuzu
  * @version  1.0.0
  */
 
-
 public final class iMona extends MIDlet {
+	/**　iMonaの画面　*/
 	MainCanvas canv;
+	/** アプリの起動 */
 	public final void startApp() {  //ここから始まる 
 		if(canv == null){	//起動時
 			canv = new MainCanvas(this);
@@ -54,12 +55,12 @@ public final class iMona extends MIDlet {
 		}
 		
 	}
-	//アプリの一時停止
+	/**　アプリの一時停止 */
 	public final void pauseApp() {
 		if(canv != null)
 			canv.stat |= 0x1000000;	//画面更新
 	}
-	//アプリの終了
+	/** アプリの終了 */
 	public final void destroyApp(boolean unconditional) {
 		canv.SaveSetting();
 		canv.thread = null;
@@ -72,17 +73,26 @@ iMonaの全ての処理が格納されているクラス
 @see iMona
 */
 final class MainCanvas extends Canvas implements Runnable,CommandListener {
+	/**	iMonaで使用するform */
 	Form form;
+	/**	バージョン用変数 */
 	String ver = "1.0.0";
+	/**	色々なところで使うテキストフィールド。日本語入力向けのLocalizedTextFieldを使用しています。 */
 	LocalizedTextField bname, btitle, bres, bboard, bthread, tfield, tfield2;
+	/**	色々なところで使うテキストボックス。日本語入力向けのLocalizedTextBoxを使用しています。 */
 	LocalizedTextBox tbox;
+	/** 色々なところで繰り返し使うChoiceGroup */
 	ChoiceGroup choice;
 	/** BBSディレクトリ名 */
 	String bbsname;
 	
+	/** クッションリンクのリストを表示するためのString変数 */
 	String cushionlinklist = "zuzu鯖\nimona.zuzu-service.net/ime.php?\n\n桜楓椿鯖\nime.k2y.info/?";
 	//String searchurl = "";
+	/** 書き込み時に入力した内容を保存するためのString変数 */
 	String name = "", mail = "", bodytext = "", title = "";
+	
+	/**　現在使用中の中間サーバーを保存するためのString変数　*/
 	String server = "";
 	/** 拡張オプション */
 	String extendedoption = "";
@@ -95,11 +105,13 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 	//
 	/** forなどの繰り返しを高速化するための一時変数 */
 	int i_length; //forなどの繰り返し用の一時変数
+	
+	/**　バグ報告の為に追加した変数。現在は使用していない。　*/
 	String bagdata = "";
 	//過去の名前入力履歴
 	//String Namelist[] = new String[10];
 	//int Namenum = 0;
-	/** NGワード判定用文字列	 */
+	/** NGワード判定用String変数	 */
 	String ngword;
 	//String textdata[] = new String[20];
 	//cushionlinklist
@@ -139,14 +151,19 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 	/** 詳細不明<br> リンク元を格納するところ。中身はBookMarkDataと同じ方式。*/
 	int  Linkrefsc[] = new int[10];	//リンク元を格納するところ。中身はBookMarkDataと同じ方式。
 	//List alist;
+	/** 通信用のoutput */
 	ByteArrayOutputStream outarray;
 	/** ダウンロードしたデータを格納する場所 */
 	byte dlarray[];	//ダウンロードしたデータを格納する場所
 	/** 板データを格納する場所 */
 	byte brdarray[];	//板データを格納する場所
+	/**　親クラス　　*/
 	iMona parent;
 	
+	/**　MIDPで必須のDisplayクラス。ここに全てを描画する。　*/
 	Display disp;
+	
+	/** リストボックス。いわゆる各種メニュー表示用　　*/
 	String ListBox[];
 	//-/String DataFolder[];
 	/** 画面の幅 */
@@ -156,8 +173,12 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 //	int nThread[];		//スレッドの番号を格納する配列
 //	String ThreadName[];//スレッド名を格納する配列
 //	int nRes[];			//スレッドのレス数を格納する配列
+	/**　詳細不明。どうやらDivStr用の一時変数っぽい　
+	 * @see MainCanvas#DivStr*/
 	int iDivStr[];// = new String[100];
+	/**　現在表示中のレスの中身。ただ改行がないため見にくい。　　*/
 	String resstr;
+	/** 詳細不明。レスを格納する配列かと思われる。 */
 	String DivStr[];// = new String[100];
 //	byte Res[][];//レスを格納する配列
 	//String ResElements[];//レスを格納する配列
@@ -482,7 +503,7 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	int stat4;
 
-	
+	/**　詳細不明。　たぶんdata変数のフラグを呼ぶための補助変数かと思われる。*/
 	int Powtable[] = { 1, 10, 100, 1000, 10000, 100000};
 	
 	/**
@@ -502,15 +523,13 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	String strdata[] = new String[20];
 
-	/**
-	 * 通信などに使うスレッド
-	 */
+	/** 通信などに使うスレッド */
 	Thread thread;
+	
+	/** iMonaで描画する全ての文字列の為のフォント。これをいじくれば文字形式も変わる */
 	Font font;
 	
-	/**
-	 * 壁紙用イメージ
-	 */
+	/** 壁紙用イメージ */
 	Image wallpaper = null;
 	
 	//バックバッファ
@@ -5882,7 +5901,7 @@ final class MainCanvas extends Canvas implements Runnable,CommandListener {
 					//System.out.println("\r\n\r\n-------" + resstr + "------\r\n\r\n");
 					String r_resdata = new String(resdata);
 					r_resdata = r_resdata.replace('\t','\r');
-					r_resdata = (data[6]+data[7]) + ":" + strdata[3] + "\r" + r_resdata;
+					r_resdata = Integer.toString(data[6] + nCacheSt[nCacheIndex]) + ":" + strdata[3] + "\r" + r_resdata;
 					tbox = new LocalizedTextBox("ﾚｽ", r_resdata, r_resdata.length(), LocalizedTextField.ANY);
 					//form = new Form(StrList[3][i]);
 					//form.addCommand(command[4]);
