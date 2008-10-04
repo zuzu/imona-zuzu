@@ -69,6 +69,7 @@ $compw = 'compw.txt';			# Ã»½Ì¤¹¤ë¥­¡¼¥ï¡¼¥É
 
 $hostshitaraba = 'jbbs.livedoor.jp';	# ¤·¤¿¤é¤Ð¤Î¥Û¥¹¥È
 $hostmatibbs = 'machi.to';	# ¤Þ¤ÁBBS¤Î¥Û¥¹¥È
+$hostwaiwaikakiko = 'kakiko.com|[0-9]+\.kg';	#¤ï¤¤¤ï¤¤kakiko¤Î¥Û¥¹¥È
 
 $imonathread = 1171697443;				# iMona¥¹¥ì¥Ã¥É¤Î¥¹¥ìÈÖ¹æ
 ###################################################################################################
@@ -416,6 +417,13 @@ if($userver =~ /$hostmatibbs/){	# ¤Þ¤ÁBBS
 	require 'Mb.pl';
 	#$rawmode = 1;
 }
+$waiwaikakiko = 0;
+if($userver =~ /$hostwaiwaikakiko/){	# ¤ï¤¤¤ï¤¤kakiko
+	$waiwaikakiko = 1;
+}
+
+
+
 
 
 
@@ -638,7 +646,7 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 		
 		#$str =~ m|(http://[^/]+)/([^/]+)/|;
 		#...ad...
-		#require("../ad.pl");
+		require("../ads/ad.pl");
 
 		# ¥¹¥ì¥Ã¥É¥¿¥¤¥È¥ë¤Î½ÐÎÏ
 		if($rawmode == 0){
@@ -674,7 +682,7 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 	$brd3 = $brd5;
 
 	
-	if($ver eq '' || ($writemode == 0 && $rawmode == 1) || $writemode == 1 || $shitaraba == 1 || $matibbs == 1){	# ¥ê¥À¥¤¥ì¥¯¥È
+	if($ver eq '' || ($writemode == 0 && $rawmode == 1) || $writemode == 1 || $shitaraba == 1 || $matibbs == 1 || $waiwaikakiko == 1){	# ¥ê¥À¥¤¥ì¥¯¥È
 		#mod_perlÆ°ºî»þ¤Ëhttpd.conf¤ÇPerlSendHeader On¤Ë¤Ã¤Æ¤¤¤Ê¤¤¤È¤­¤ËHTTP¥Ø¥Ã¥À¤ò½ÐÎÏ¤¹¤ë
 		#if(exists $ENV{MOD_PERL} && (!$ENV{PERL_SEND_HEADER} || $ENV{PERL_SEND_HEADER} !~ /^On/i)){
 		#	print(($ENV{SERVER_PROTOCOL} || 'HTTP/1.0') . " 302 Found\r\n");
@@ -685,6 +693,8 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 		} else {
 			if($matibbs == 1){
 				$str = $userver . "/bbs/read.pl?IMODE=TRUE&KEY=$ithread&BBS=$sboard&WRITEBOX=TRUE";
+			}elsif($waiwaikakiko == 1){	# ¤Þ¤ÁBBS
+				$str = "http://same.u.la/test/post.so?SRV=$userver&BBS=$ithread&KEY=$sboard";
 			}else{
 				$str = &boradurl($iboard);
 				$str =~ s|(http\://[^/]+/)([^/]+)/|$1test/r.i/$2/$ithread/w|;
@@ -717,7 +727,7 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 		
 		#$str =~ m|(http://[^/]+)/([^/]+)/|;
 		#...ad...
-		require("../ads/smart.cgi");
+		require("../ads/ad.pl");
 
 	
 		# ¥¹¥ì¥Ã¥É¥¿¥¤¥È¥ë¤Î½ÐÎÏ
@@ -1030,35 +1040,39 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 		if($iboard !~ /100/){
 			if(length($resbuf[3]) =~ /9/){
 				if($resbuf[3] =~ /[^0OPQoIi]$/){	              #id¤¬[0OPQo]°Ê³°¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:None"; #id¤ËNone¤òÄÉ²Ã
+					$resbuf[3] = $resbuf[3]."      Type:None"; #id¤ËNone¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /0$/){	                    #id¤¬0¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:PC&Other"; #id¤ËPC to Other¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:PC&Other"; #id¤ËPC to Other¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /O$/){	                                #id¤¬phone to PHS¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:mobilephone";#id¤Ëmobilephone&PHS¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:mobilephone";#id¤Ëmobilephone&PHS¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /P$/){	                           #id¤¬P¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:p2.2ch.net";#id¤Ëp2.2ch.net¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:p2.2ch.net";#id¤Ëp2.2ch.net¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /Q$/){	                           #id¤¬Q¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:middle2chbrowser";#id¤Ëmiddle2chbrowser¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:middle2chbrowser";#id¤Ëmiddle2chbrowser¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /o$/){	                           #id¤¬o¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:AIR-EDGEPHONE";#id¤Ëmiddle2chbrowser¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:AIR-EDGEPHONE";#id¤Ëmiddle2chbrowser¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /I$/){	                           #id¤¬I¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:DoCoMo";#id¤ËDocomo¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:DoCoMo";#id¤ËDocomo¤òÄÉ²Ã
 				}
 				if($resbuf[3] =~ /i$/){	                           #id¤¬I¤Ê¾ì¹ç
-					$resbuf[3] = "$resbuf[3]      Type:DoCoMo";#id¤ËDocomo¤òÄÉ²Ã
+					$resbuf[3] .= "      Type:DoCoMo";#id¤ËDocomo¤òÄÉ²Ã
 				}
 			}
 		}
 		#$resbuf[4] =~ s/(h?ttps?:?[\x21-\x3B\x3D\x3F-\x7E]+)/&urlh($1)/eg;
 		
-		#Æü»þ¥Õ¥©¡¼¥Þ¥Ã¥È°Û¾ïÂÐºö
-		#$resbuf[2] =~ s/ ([0-9]{2}:[0-9]{2})$/ $1:00/;
+		#"¿À"º®ÆþÂÐºö
+		if($resbuf[2] =~ s/<a href\=\"http:\/\/2ch\.se\/\">(.+?)<\/a>//){
+			$resbuf[3] .= $1;
+		}
+		
+		
 
 		if($kddi == 1 &&$ver <= 15){		# 0.77¦Â°ÊÁ°¤Î¢÷É½¼¨ÉÔ¶ñ¹çÂÐºö
 			$resbuf[3] =~ s/\x81\xF5/ Ktai/;
@@ -1390,7 +1404,9 @@ sub urlh {
 	my $url = $_[0];
 	$url =~ s/\#/\$/;
 	if($url =~ /[\/\.]2ch\.net|[\/\.]bbspink\.com|[\/\.]kakiko\.com|[\/\.]psychedance\.com|[\/\.]3ch\.jp|[\/\.]vip2ch\.com|[\/\.]k2y\.info|[\.\/]shiroro\.com|[\.\/]machi\.to/){
-		return "$url";
+		if($url !~ /sukima\.vip2ch\.com/){
+			return "$url";
+		}
 	}
 	$url =~ s/h?ttp:\/\//http:\/\//;
 	if($sp =~ /2/){
