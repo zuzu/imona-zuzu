@@ -1185,6 +1185,17 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				disp.setCurrent(this);
 			}
 			//setSoftLabel(Frame.SOFT_KEY_2, null);
+			if((stat4 & 0x0080000) != 0){
+				stat4 ^= 0x0080000;
+				showBookMark(0);
+				showBookMark(1);
+				showBookMark(0);
+				stat3 &= ~0x8000400;
+				ListBox = tBookMark;
+				data[10] = data[67];	data[11] = data[68];
+				addCommand(command[0]);
+				addCommand(command[3]);
+			}
 			stat |= 0x1000000;	//画面更新
 		}
 		//repaint();
@@ -1602,30 +1613,30 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //					data[85] = DivStr.length;
 				}
 			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0 ){	//ﾚｽｽｸﾛｰﾙ
-				if((stat2 & 0x0000080) != 0){
-					if((data[49] & 0x100) != 0){
-						if( data[6] > 0 ){	//前のレスに戻る
-							data[6]--;
-							makeRes();
-							//DivStr = sepalateString(ResElements[3]);
-							//stat |= 0x1000000;	//画面更新
-						} else if(nCacheSt[nCacheIndex]/*data[7]*/ == 1) {	//一番初めのレス
-							backfromfirst();
-						} else {	//前のレスを読み込む
-							if(nCacheSt[nCacheIndex]/*data[7]*/ <= data[1]){i = 1;} else {i = nCacheSt[nCacheIndex]/*data[7]*/ - data[1];}
-							//sendstr = "b=" + data[3] + "&t=" + nThread[data[5] % data[0]] + "&c=s" + i + "t" + (data[7] - 1);//m=m
-							//httpinit();
-							stat3 |= 0x0000010;	//ＤＬしたレス・スレッドリストを最後から見ることを示すフラグ
-							stat3 |= 0x0000100;	//参照元を保存しない
-							strdata[8] = strdata[9];
-							httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,i,nCacheSt[nCacheIndex]/*data[7]*/ - 1,nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
-						}
+				if((stat2 & 0x0000080) != 0 && (data[49] & 0x100) != 0 && keyCode == KEY_NUM4){
+							if( data[6] > 0 ){	//前のレスに戻る
+								data[6]--;
+								makeRes();
+								//DivStr = sepalateString(ResElements[3]);
+								//stat |= 0x1000000;	//画面更新
+							} else if(nCacheSt[nCacheIndex]/*data[7]*/ == 1) {	//一番初めのレス
+								backfromfirst();
+							} else {	//前のレスを読み込む
+								if(nCacheSt[nCacheIndex]/*data[7]*/ <= data[1]){i = 1;} else {i = nCacheSt[nCacheIndex]/*data[7]*/ - data[1];}
+								//sendstr = "b=" + data[3] + "&t=" + nThread[data[5] % data[0]] + "&c=s" + i + "t" + (data[7] - 1);//m=m
+								//httpinit();
+								stat3 |= 0x0000010;	//ＤＬしたレス・スレッドリストを最後から見ることを示すフラグ
+								stat3 |= 0x0000100;	//参照元を保存しない
+								strdata[8] = strdata[9];
+								httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,i,nCacheSt[nCacheIndex]/*data[7]*/ - 1,nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
+				
+							}
+				}else{
+					if((stat2 & 0x0400000) == 0){
+						stat3 &= ~0x0010000;	//スクロール実績
+						stat2 |= 0x0400000;//左スクロールON
+						//Scroll();
 					}
-				}
-				if((stat2 & 0x0400000) == 0){
-					stat3 &= ~0x0010000;	//スクロール実績
-					stat2 |= 0x0400000;//左スクロールON
-					//Scroll();
 				}
 			} else if((stat & 0x0040000) != 0){	//レスを見てたとき
 				if( data[6] > 0 ){	//前のレスに戻る
@@ -1661,22 +1672,21 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					showBookMark(1);
 				}
 			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0){	//ﾚｽｽｸﾛｰﾙ&AAModeの場合
-				if((stat2 & 0x0000080) != 0){
-					if((data[49] & 0x100) != 0){
+				if((stat2 & 0x0000080) != 0 && (data[49] & 0x100) != 0 && keyCode == KEY_NUM6){
 						if(data[6] < nCacheTo[nCacheIndex]/*data[8]*/ - nCacheSt[nCacheIndex]/*data[7]*/){	//次のレスに行く
 							data[6]++;
 							if(data[84] > 0 && data[6] + data[84] == nCacheTo[nCacheIndex] - nCacheSt[nCacheIndex] && nCacheTo[nCacheIndex] < nCacheAll[nCacheIndex]){
 								stat3 |= 0x0000080;	//先読みをすることを示すフラグ
-
+	
 								stat3 |= 0x0000100;	//参照元を保存しない
 								strdata[8] = strdata[9];
 								httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
-
-								//stat |= 0x0020000;	//Loading中のスレ読み
+	
+									//stat |= 0x0020000;	//Loading中のスレ読み
 							}
-							makeRes();
-							//DivStr = sepalateString(ResElements[3]);
-							//stat |= 0x1000000;	//画面更新
+								makeRes();
+								//DivStr = sepalateString(ResElements[3]);
+								//stat |= 0x1000000;	//画面更新
 						} else {	//次のレスを読み込む
 							//sendstr = "b=" + data[3] + "&t=" + nThread[data[5] % data[0]] + "&c=s" + (data[8] + 1) + "t" + (data[8] + data[1]);//m=m
 							//httpinit();
@@ -1684,7 +1694,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							strdata[8] = strdata[9];
 							httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
 						}
-					}
+					
 				}else{
 					if((stat2 & 0x0800000) == 0){
 						stat3 &= ~0x0010000;	//スクロール実績
@@ -1930,10 +1940,18 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						
 					}else{
 						stat4 |= 0x0080000;
-						data[67] = data[10];	data[68] = data[11];
-						data[10] = 0;	data[11] = 0;
-						stat3 |= 0x0000400;
+						//removeCommand(command[3]);
+						//removeCommand(command[0]);
+						//data[67] = data[10];	data[68] = data[11];
+						//data[10] = 0;	data[11] = 0;
+						showBookMark(1);
+						//stat3 |= 0x0000400;
+						stat |= 0x1000000;	//画面更新
+						
 						keyReleased(KEY_NUM5);
+						//addCommand(command[3]);
+						//removeCommand(command[0]);
+						//addCommand(command[0]);
 					}
 				}
 				
@@ -2000,6 +2018,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			} else {
 				httpinit( 2, i, zuzu[0], zuzu[1], j/*nThread[data[4]]*/);
 			}
+
 		} else {
 			//NumSet();
 			removeCommand(command[9]);
@@ -2151,7 +2170,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 					if((stat4 & 0x0080000) != 0){
 						i = data[71];
-						stat4 ^= 0x0080000;
+						
 					}
 
 					strdata[8] = BookMark[j];
@@ -2166,6 +2185,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						addCommand(command[0]);
 						addCommand(command[3]);
 					}
+
 					stat2 &= ~0x0004000;	//function解除
 					stat |= 0x1000000;	//画面更新
 				}
