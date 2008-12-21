@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/SOFTBANK_MEAX_EMULATOR12/lib/stubclasses.zip">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/C:/SOFTBANK_MEAX_EMULATOR12/javadoc/mexa/"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="C:/SOFTBANK_MEAX_EMULATOR12/lib/stubclasses.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

@@ -33,14 +33,14 @@ import com.jblend.micro.lcdui.LocalizedTextField;
 
 /** iMona@zuzu
  * @author zuzu
- * @version  1.0.2
+ * @version  1.0.3
  */
 
 public final class iMona extends MIDlet {
 	/**　iMonaの画面　*/
 	mainCanvas canv;
 	/** アプリの起動 */
-	public final void startApp() {  //ここから始まる 
+	public final void startApp() {  //ここから始まる
 		if(canv == null){	//起動時
 			canv = new mainCanvas(this);
 			canv.disp = Display.getDisplay(this);
@@ -53,7 +53,7 @@ public final class iMona extends MIDlet {
 */
 			canv.stat |= 0x1000000;	//画面更新
 		}
-		
+
 	}
 	/**　アプリの一時停止 */
 	public final void pauseApp() {
@@ -66,7 +66,7 @@ public final class iMona extends MIDlet {
 		canv.thread = null;
 	}
 } //classiMonaの終わり
-	
+
 /**
 iMonaの全ての処理が格納されているクラス
 @author 作者 & zuzu
@@ -76,7 +76,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/**	文字入力時に使用するform */
 	Form inputForm;
 	/**	バージョン用変数 */
-	String version = "1.0.2";
+	String version = "1.0.3Xmas";
 	/**	色々なところで使うテキストフィールド。日本語入力向けのLocalizedTextFieldを使用しています。 */
 	LocalizedTextField /*bname,*/ btitle, bres, bboard, bthread, tfield, tfield2;
 	/**	色々なところで使うテキストボックス。日本語入力向けのLocalizedTextBoxを使用しています。 */
@@ -85,13 +85,16 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	ChoiceGroup choice;
 	/** BBSディレクトリ名 */
 	String bbsname;
-	
+
 	/** クッションリンクのリストを表示するためのString変数 */
 	String cushionlinklist = "zuzu鯖\nimona.zuzu-service.net/ime.php?\n\n桜楓椿鯖\nime.k2y.info/?";
 	//String searchurl = "";
 	/** 書き込み時に入力した内容を保存するためのString変数 */
 	String name = "", mail = "", bodytext = "", title = "";
 	
+	/** cookieを収納するString変数 **/
+	String cookie = "";
+
 	/**　現在使用中の中間サーバーを保存するためのString変数　*/
 	String server = "";
 	/** 拡張オプション */
@@ -105,9 +108,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//
 	/** forなどの繰り返しを高速化するための一時変数 */
 	int i_length; //forなどの繰り返し用の一時変数
-	
+
 	/**　バグ報告の為に追加した変数。現在は使用していない。　*/
-	String bagdata = "";
+	StringBuffer bagdata = new StringBuffer("");
 	//過去の名前入力履歴
 	//String Namelist[] = new String[10];
 	//int Namenum = 0;
@@ -122,7 +125,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//server
 	//廃止：リンクは必ず行の先頭にある。
 	//同一スレッド内,他のスレッド,2ch外
-	
+
 	/** *詳細不明<br>
 	 * XXXYYYYZZZ<br>
      * XXX:リンクの文字数(byte数)(Linklist[x] / 10000000)<br>
@@ -134,7 +137,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	int Linklist2[] = new int[40];
 	/**  詳細不明<br>リンクのURLを収納する配列 */
 	String Linkurllist[] = new String[40];
-	
+
 	/**　詳細不明<br>リンク元を格納するところ。中身はBookMarkDataと同じ方式。<br>
 	 * n:整数<br>
 	　*　Linkref[3n+0]:板番号<br>
@@ -159,10 +162,10 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	byte brdarray[];	//板データを格納する場所
 	/**　親クラス　　*/
 	iMona parent;
-	
+
 	/**　MIDPで必須のDisplayクラス。ここに全てを描画する。　*/
 	Display disp;
-	
+
 	/** リストボックス。いわゆる各種メニュー表示用　　*/
 	String ListBox[];
 	//-/String DataFolder[];
@@ -188,7 +191,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	int BookMarkData[];
 	/**　トリミング済みのブックマーク名　*/
 	String tBookMark[] = new String[200];
-	
+	/**　ブックマークの接続URL　*/
+	String BookMarkUrl[] = new String[200];
+
 	//キャッシュ関係
 	/** 現在読んでいるキャッシュのインデックス。キャッシュ系の配列はこれをキーにして読み込む */
 	int nCacheIndex;
@@ -197,7 +202,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/** スレッドのデータ(板のキャッシュの時はnull) */
 	byte CacheResData[][][] = new byte[40][][];
 	/** 板のデータ(スレッドタイトル)(スレッドのキャッシュの時はnull) */
-	String CacheBrdData[][] = new String[40][];	
+	String CacheBrdData[][] = new String[40][];
 	/** 板のデータ(レス数)(スレッドのキャッシュの時はnull) */
 	int nCacheBrdData[][] = new int[40][];
 	/** スレッド番号(スレッドのキャッシュの時はnCacheTh[x][0]を使う) */
@@ -506,9 +511,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 	/**　詳細不明。　たぶんdata変数のフラグを呼ぶための補助変数かと思われる。*/
 	int Powtable[] = { 1, 10, 100, 1000, 10000, 100000};
-	
+
 	/**
-	 * 長期的な保存が必要なStrgin変数用の配列
+	 * 長期的な保存が必要なString変数用の配列
 	 * 00 - サーバのURL<br>
 	 * 01 - 板のURL(空の場合はまだ取得されていない)<br>
 	 * 02 - setstr<br>
@@ -526,13 +531,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 	/** 通信などに使うスレッド */
 	Thread thread;
-	
+
 	/** iMonaで描画する全ての文字列の為のフォント。これをいじくれば文字形式も変わる */
 	Font font;
-	
+
 	/** 壁紙用イメージ */
 	Image wallpaper = null;
-	
+
 	//バックバッファ
 	//Image backbuf;
 	//Graphics bg;
@@ -554,12 +559,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/*00*/	{},//temporary
 	/*01*/	{"板一覧", "ﾌﾞｯｸﾏｰｸ", "URL指定"/*, "全ｽﾚｯﾄﾞ検索*/, "設定", /*"ﾃﾞｰﾀﾌｫﾙﾀﾞ"*//*"BGM",*/ "終了"},
 	/*02*/	{/*"このｽﾚをみる", */"一覧に戻る", "最新ﾚｽ", "ﾚｽ番指定", "1のみ取得", "ﾌﾞｯｸﾏｰｸに登録", "ｽﾚｯﾄﾞを立てる", "再読込", "ｷｬｯｼｭｸﾘｱ", "通信の詳細", /*"ﾒﾆｭｰを閉じる"*/"閉じる"},
-	/*03*/	{"一覧に戻る", "最新ﾚｽ", "ﾚｽ番指定", "書込","ここにレス", "書込画面のURL", "ﾌﾞｯｸﾏｰｸ", "ﾌﾞｯｸﾏｰｸに登録", "設定", "ﾃｷｽﾄﾎﾞｯｸｽ", "ﾃｷｽﾄﾎﾞｯｸｽ(URL)", "ｷｬｯｼｭｸﾘｱ", "AAS", /* "ｽﾚｯﾄﾞの詳細",*/ "通信の詳細", /*"ﾒﾆｭｰを閉じる"*/"閉じる"},
+	/*03*/	{"一覧に戻る", "最新ﾚｽ", "ﾚｽ番指定", "書込",/*"ここにレス",*/ "書込画面のURL", "ﾌﾞｯｸﾏｰｸ", "ﾌﾞｯｸﾏｰｸに登録", "設定", "ﾃｷｽﾄﾎﾞｯｸｽ", "ﾃｷｽﾄﾎﾞｯｸｽ(URL)", "ｷｬｯｼｭｸﾘｱ", "AAS", /* "ｽﾚｯﾄﾞの詳細",*/ "通信の詳細", /*"ﾒﾆｭｰを閉じる"*/"閉じる"},
 	/*04*/	{"板ﾘｽﾄ更新", "設定の保存", "表示設定", "操作設定", "通信設定", "その他", "戻る"},
 	/*05*/	{"文字ｻｲｽﾞ","文字ｽﾀｲﾙ","文字ﾌｪｲｽ", "行間", "日時表示", "時刻表示", "秒表示", /*"ｽﾚ一覧のﾒﾆｭｰ数", */"背面液晶", "ﾊｲｺﾝﾄﾗｽﾄ", "壁紙非表示", "ｷｬｯｼｭ情報の表示", "ｽﾚ情報の表示", "電池と電波ﾏｰｸ", "戻る"},
-	/*06*/	{"ｽｸﾛｰﾙ量", "ｽｸﾛｰﾙ方法(ｽﾚ覧)", "ｵｰﾄｽｸﾛｰﾙ", "SO用ｽｸﾛｰﾙ処理", "戻る"},
+	/*06*/	{"ｽｸﾛｰﾙ量", "ｽｸﾛｰﾙ方法(ｽﾚ覧)", "ｵｰﾄｽｸﾛｰﾙ", "SO用ｽｸﾛｰﾙ処理", "6,4ｷｰでﾚｽ移動(AAMode)", "戻る"},
 	/*07*/	{"1回に読むｽﾚ数", "1回に読むﾚｽ数", "最新ﾚｽで読む数"/*, "最新ﾚｽで1も読む"*/, "gzip圧縮", "iMona圧縮", "IDの表示", "時刻の表示", "ﾒｱﾄﾞの表示", "名前の表示", "AAの表示", "URLの表示", "戻る"},
-	/*08*/	{"ﾊﾟｹｯﾄ代の累計", "累計のﾘｾｯﾄ", "ﾊﾟｹｯﾄ代の単価", "ﾊﾟｹｯﾄ代警告", "先読み機能", "自動しおり機能", "ﾒｰﾙ着信の通知", "透明削除対策", "最新ﾚｽ表示(ｽﾚ覧)", "7ｷｰの機能(ｽﾚ覧)", "7ｷｰの機能(ﾌﾞｸﾏ覧)", "7ｷｰの機能(ﾚｽ覧)", "0ｷｰの機能", "ｻｰﾊﾞｰ設定", "拡張ｵﾌﾟｼｮﾝ", "ｸｯｼｮﾝﾘﾝｸ", "書込画面のURL", "常にアンカーレス", /*"ｽﾚｷｰﾘﾋﾟｰﾄ速度",*/"ｳｴｲﾄ", "NGﾜｰﾄﾞ","ﾊﾞｸﾞ報告",/* "!ﾌﾞｸﾏ初期化!",*/ "!初期化!", "ﾒﾓﾘ情報", "戻る"},
+	/*08*/	{"ﾊﾟｹｯﾄ代の累計", "累計のﾘｾｯﾄ", "ﾊﾟｹｯﾄ代の単価", "ﾊﾟｹｯﾄ代警告", "先読み機能", "自動しおり機能", "ﾒｰﾙ着信の通知", "透明削除対策", "最新ﾚｽ表示(ｽﾚ覧)", "7ｷｰの機能(ｽﾚ覧)", "7ｷｰの機能(ﾌﾞｸﾏ覧)", "7ｷｰの機能(ﾚｽ覧)", "0ｷｰの機能", "ｻｰﾊﾞｰ設定", "拡張ｵﾌﾟｼｮﾝ", "ｸｯｼｮﾝﾘﾝｸ", "書込画面のURL", "常にアンカーレス", /*"ｽﾚｷｰﾘﾋﾟｰﾄ速度",*/"ｳｴｲﾄ", "NGﾜｰﾄﾞ(未実装)","ﾊﾞｸﾞ報告",/* "!ﾌﾞｸﾏ初期化!",*/ "!初期化!", "ﾒﾓﾘ情報", "戻る"},
 
 	/*09*/	{},
 	/*10*/	{"小", "中", "大"},
@@ -571,7 +576,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/*16*/	{"隙間を詰める", "隙間を作る", "ｴｸｽﾎﾟｰﾄ" , "ｲﾝﾎﾟｰﾄ", "全消去"},
 	/*17*/	{"最新ﾚｽを読む", "ﾚｽ番指定", "書込" , "書込画面のURL", "ｽﾚｯﾄﾞ検索", "編集", "消去"},
 	/*18*/	{"ｽﾚｯﾄﾞ検索", "編集", "消去"},
-	
+
 	/*19*/	{"単位は", "\\/1000pcktです" , "ex)\\0.3/p->300", "0:自動設定"},
 	/*20*/	{"設定金額を超え", "ると､警告が表示" , "されます｡"},
 	/*21*/	{"ここで指定した", "ﾚｽ数前になると", "先読みをします", "0:先読みしない"},
@@ -586,12 +591,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/*30*/	{"0:無し", "1:Mona 2:Nomal", "3:1+星 4:2+星"},
 	/*31*/	{"選択ｷｰで最新ﾚｽ", "を読みます｡"},
 	/*32*/	{"0:通常", "1:1ｽﾚずつｽｸﾛｰﾙ", "2:ﾍﾟｰｼﾞｽｸﾛｰﾙ"},
-	
+
 	/*33*/  {"○:ﾌﾞﾗｳｻﾞを起動", "×:ｱﾄﾞﾚｽを表示"},
 	/*34*/  {"ﾐﾘ秒で指定して", "ください｡", "0:非表示"},
 	/*35*/  {"普","太","斜"},
 	/*36*/  {"0:ｼｽﾃﾑ","1:等幅","2:ﾌﾟﾛﾎﾟｰｼｮﾅﾙ"},
-	/*37*/  {"文字ｻｲｽﾞ変更(常)","非ｸｯｼｮﾝﾘﾝｸｼﾞｬﾝﾌﾟ(ﾚｽ)","自動しおりON,OFF(常)","ﾌﾞｯｸﾏｰｸ登録(ﾚｽ,ｽﾚ)"},
+	/*37*/  {"文字ｻｲｽﾞ変更(常)","非ｸｯｼｮﾝﾘﾝｸｼﾞｬﾝﾌﾟ(ﾚｽ)","自動しおりON,OFF(常)","ﾌﾞｯｸﾏｰｸ登録(ﾚｽ,ｽﾚ)","板ﾘｽﾄ更新"},
 	/*38*/  {"○:常にﾚｽｱﾝｶｰ", "×:ﾚｽｱﾝｶｰを付けない"}
 		};
 	//00 テンポラリ
@@ -610,8 +615,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//13 BoardList
 	//14 setcmstr
 	//15 info
-	//16 
-	//17 
+	//16
+	//17
 	//18
 	//19
 
@@ -630,8 +635,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//Graphics g;	//バックバッファ
 	//Image    img2;
 	Calendar calendar;
-	
+
 	HttpConnection co = null;
+	
+	/**
+	 * iMona@zuzu専用変数保存領域
+	 * 0.レス番号指定の保存
+	 */
+	int zuzu[] = new int[10];
 
 
 	Command command[] = new Command[10];
@@ -641,10 +652,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 * @param p iMona
 	 */
 	public mainCanvas(iMona p){
+
 		int key = 0;
 		int i;
 		parent = p;
 		calendar = Calendar.getInstance();
+		zuzu[0] = 0;
 
 
 		command[0] = new Command("ﾒﾆｭｰ",1/*Command.SCREEN*/,0);
@@ -669,7 +682,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//ダブルバッファリング
 		//backbuf = Image.createImage( width, height);
 		//bg = backbuf.getGraphics();
-		
+
 		data[50] = width / 2;
 		data[51] = height / 2;
 		data[52] = width / 2;
@@ -748,7 +761,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 */
 	public final void brdinit(){
 		int i;
-		
+
 
 		try{
 //#ifdef 	//
@@ -773,7 +786,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				StrList[13] = new String[CATNUM];//板
 */
 				String[] tmp = new String[100];
-				
+
 //#ifdef DOJA	//DOJA
 //				ByteArrayInputStream in = new ByteArrayInputStream(dlarray);
 //#else
@@ -840,7 +853,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 				}
 				in.close();
-				
+
 				StrList[13] = new String[i];//板
 				System.arraycopy(tmp, 0, StrList[13], 0, i);
 			}
@@ -860,7 +873,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	public final synchronized void commandAction(Command c,Displayable s) {
 		commandAction(c);
 	}
-	
+
 	/**
 	 * コマンドイベント
 	 * @param c Command
@@ -892,7 +905,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else {
 					stat |= 0x0100;
 					data[10] = data[11] = 0;
-					
+
 					//if((stat2 & 0x0020000) != 0){
 					//	ListBox[0] = "ﾌﾞｯｸﾏｰｸに戻る";
 					//}
@@ -983,7 +996,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				//} else {
 				//	httpinit(4,BookMarkData[i * 3],0,0,0);
 				//}
-				
+
 				httpinit(4,Linkref[0],1,0,0);
 				thttpget();	//httpgetdata()を新規スレッドで動作
 				stat2 &= ~0x4000000;
@@ -1011,7 +1024,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			} else if((stat3 & 0x4000000) != 0){	//ｲﾝﾎﾟｰﾄ
 				/*String test = tobox.getString();
 				if(test.indexOf("iB2") == 0){
-					
+
 				}*/
 				String[] buf = split(tbox.getString(), ',');
 				if(buf[0].equals("iB2")){
@@ -1025,7 +1038,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						if(EditBookMark(0, buf[i], Integer.parseInt(buf[i+1],36), Integer.parseInt(buf[i+2],36), Integer.parseInt(buf[i+3],36)) < 0){
 							break;
 						}
-					}					
+					}
 				}
 				disp.setCurrent(this);
 				stat3 &= ~0x4000000;
@@ -1051,16 +1064,16 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				Linkref[0] = (data[22] + data[23]) * 100 + i;
 			}
 			inputForm.append(tfield);
-			
+
 			inputForm.addCommand(command[8]);
 			inputForm.addCommand(command[2]);
-			
+
 			inputForm.setCommandListener(this);
-			
+
 			disp.setCurrent(inputForm);
-			
+
 			stat2 |= 0x4000000;
-		
+
 		} else if(c == command[3]){	//編集
 			if((stat2 & 0x0010000) != 0 && (stat2 & 0x0040000) == 0){//ﾌﾞｯｸﾏｰｸ
 
@@ -1073,14 +1086,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				inputForm.append(bres);
 				inputForm.append(bboard);
 				inputForm.append(bthread);
-				
+
 				inputForm.addCommand(command[4]);
 				inputForm.addCommand(command[2]);
-				
+
 				inputForm.setCommandListener(this);
-				
+
 				disp.setCurrent(inputForm);
-				
+
 				stat2 |= 0x0040000;
 			}
 		} else if(c == command[9]){//板をﾌﾞｯｸﾏｰｸ登録
@@ -1092,7 +1105,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//	EditBookMark( 0, CacheBrdData[nCacheIndex]/*ThreadName*/[data[4]], nCacheBrd[nCacheIndex]/*data[3]*/, nCacheTh[nCacheIndex]/*nThread*/[data[4]], 0);
 			}
 			//stat |= 0x1000000;
-			
+
 /*		} else if(c == command[1]){
 			if((stat2 & 0x0010000) != 0){//ﾌﾞｯｸﾏｰｸの消去
 				i = data[10] + data[11];
@@ -1108,7 +1121,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			///System.out.println("ST:CANCEL");
 			if((stat & 0x0000400) != 0){	//設定取り消し
 				stat &= ~0x0000400;//if((stat & 0x0000400) != 0){stat ^= 0x0000400;}
-				
+
 				stat2 &= ~0x0000740;//下の4つを結合
 				//stat2 &= ~0x0000040;
 				//stat2 &= ~0x0000100;//if((stat2 & 0x0000100) != 0){stat2 ^= 0x0000100;}
@@ -1121,7 +1134,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				data[53] = height / 2;
 */
 				stat2 &= ~0x1000000;
-				
+
 				removeCommand(command[2]);
 //				if( (stat & 0x10000) != 0 ){	//ｽﾚ選択中の時
 //					addCommand(command[9]);
@@ -1182,7 +1195,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	public final void keyRepeated(int keyCode) {
 		if( keyCode != 0 ){
 			int action = getGameAction(keyCode);
-			
+
 			if((action == DOWN || action == UP || keyCode == KEY_NUM8 || keyCode == KEY_NUM2) && (stat & 0x0100) != 0){
 				keyPressed(keyCode);
 			}
@@ -1202,7 +1215,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	protected synchronized final void keyPressed(int keyCode) {
 		int i, j = 0, k;
-		
+
 		data[95] = 0;
 
 
@@ -1265,7 +1278,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat |= 0x8800000;	//画面更新 0x8000000 + 0x0800000
 			} else if( (stat & 0x0100) != 0 ){	//リストボックス表示.
 				j = data[10] + data[11];
-				
+
 				if((stat2 & 0x0010000) != 0 && (j >= data[66] || (j == data[66]-1 && (stat2 & 0x0004000) != 0)) && (stat3 & 0x0000400) == 0){	//ブックマーク
 					data[10] = 0;	data[11] = 0;
 				} else if(j < ListBox.length - 1){	//data[10] リスト移動	//data[11] 選択移動
@@ -1281,11 +1294,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else {
 					data[10] = 0;	data[11] = 0;
 				}
-				
+
 				if(j != data[10] + data[11] && (stat2 & 0x0014000) == 0x0014000 && (stat3 & 0x0000400) == 0){	//ブックマークの移動
 					ChangeBookMark(j , data[10] + data[11]);
 				}
-				
+
 				stat |= 0x4800000;	//リスト画面更新+トップの再描画は必要ない
 /*					} else if(mode == 0){
 			} else if(mode == 1){
@@ -1315,7 +1328,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						stat |= 0x0200000;//下スクロールON
 						data[88] = 0;
 						//Scroll();
-					}// else 
+					}// else
 					if( (data[49] & 0x20) != 0){	//SO用ｽｸﾛｰﾙ処理
 						Scroll();
 					}
@@ -1378,7 +1391,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					//stat |= 0x0800000;	//トップの再描画は必要ない
 					//stat |= 0x4800000;	//上二つのセット
 				}
-				
+
 				if(j != data[10] + data[11] && (stat2 & 0x0014000) == 0x0014000){	//ブックマークの移動
 					ChangeBookMark(j , data[10] + data[11]);
 				}
@@ -1394,7 +1407,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						stat |= 0x0100000;//上スクロールON
 						data[88] = 0;
 						//Scroll();
-					}// else 
+					}// else
 					if( (data[49] & 0x20) != 0){	//SO用ｽｸﾛｰﾙ処理
 						Scroll();
 					}
@@ -1516,14 +1529,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						stat2 ^= 0x0000010;
 						ListBox = StrList[4];
 					} else */
-					
+
 					//stat2 &= ~0x0000020;
 					//stat2 &= ~0x0000010;	//通信設定
 					//stat2 &= ~0x0000008;	//通信設定
 					//stat2 &= ~0x0000004;	//色の設定
 					//stat2 &= ~0x0000002;	//表示設定
 					stat2 &= ~0x000003E;
-					
+
 					ListBox = StrList[4];
 					//data[19] = ListBox.length;
 					data[10] = data[20];	data[11] = data[21];
@@ -1561,7 +1574,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //				} else {
 //					return;
 				}
-				
+
 				stat |= 0x1000000;	//画面更新
 			} else if( (stat & 0x10000) != 0 ){	//ｽﾚ選択中の時
 //				if(data[5] == 0){//一番はじめのスレを選択していた場合
@@ -1583,12 +1596,32 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //					data[4]--;
 //
 //					chkcache();	//キャッシュチェック
-//						
+//
 //					//DivStr = SeparateString(ThreadName[data[5] % data[0]], -1);
 //					DivStr = FastSeparateByte(CacheBrdData[nCacheIndex]/*ThreadName*/[data[4]].getBytes());
 //					data[85] = DivStr.length;
 				}
 			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0 ){	//ﾚｽｽｸﾛｰﾙ
+				if((stat2 & 0x0000080) != 0){
+					if((data[49] & 0x100) != 0){
+						if( data[6] > 0 ){	//前のレスに戻る
+							data[6]--;
+							makeRes();
+							//DivStr = sepalateString(ResElements[3]);
+							//stat |= 0x1000000;	//画面更新
+						} else if(nCacheSt[nCacheIndex]/*data[7]*/ == 1) {	//一番初めのレス
+							backfromfirst();
+						} else {	//前のレスを読み込む
+							if(nCacheSt[nCacheIndex]/*data[7]*/ <= data[1]){i = 1;} else {i = nCacheSt[nCacheIndex]/*data[7]*/ - data[1];}
+							//sendstr = "b=" + data[3] + "&t=" + nThread[data[5] % data[0]] + "&c=s" + i + "t" + (data[7] - 1);//m=m
+							//httpinit();
+							stat3 |= 0x0000010;	//ＤＬしたレス・スレッドリストを最後から見ることを示すフラグ
+							stat3 |= 0x0000100;	//参照元を保存しない
+							strdata[8] = strdata[9];
+							httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,i,nCacheSt[nCacheIndex]/*data[7]*/ - 1,nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
+						}
+					}
+				}
 				if((stat2 & 0x0400000) == 0){
 					stat3 &= ~0x0010000;	//スクロール実績
 					stat2 |= 0x0400000;//左スクロールON
@@ -1627,22 +1660,48 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					//ShowBookMarkMenu();
 					showBookMark(1);
 				}
-			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0 ){	//ﾚｽｽｸﾛｰﾙ
-				if((stat2 & 0x0800000) == 0){
-					stat3 &= ~0x0010000;	//スクロール実績
-					stat2 |= 0x0800000;//右スクロールON
-					//Scroll();
+			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0){	//ﾚｽｽｸﾛｰﾙ&AAModeの場合
+				if((stat2 & 0x0000080) != 0){
+					if((data[49] & 0x100) != 0){
+						if(data[6] < nCacheTo[nCacheIndex]/*data[8]*/ - nCacheSt[nCacheIndex]/*data[7]*/){	//次のレスに行く
+							data[6]++;
+							if(data[84] > 0 && data[6] + data[84] == nCacheTo[nCacheIndex] - nCacheSt[nCacheIndex] && nCacheTo[nCacheIndex] < nCacheAll[nCacheIndex]){
+								stat3 |= 0x0000080;	//先読みをすることを示すフラグ
+
+								stat3 |= 0x0000100;	//参照元を保存しない
+								strdata[8] = strdata[9];
+								httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
+
+								//stat |= 0x0020000;	//Loading中のスレ読み
+							}
+							makeRes();
+							//DivStr = sepalateString(ResElements[3]);
+							//stat |= 0x1000000;	//画面更新
+						} else {	//次のレスを読み込む
+							//sendstr = "b=" + data[3] + "&t=" + nThread[data[5] % data[0]] + "&c=s" + (data[8] + 1) + "t" + (data[8] + data[1]);//m=m
+							//httpinit();
+							stat3 |= 0x0000100;	//参照元を保存しない
+							strdata[8] = strdata[9];
+							httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
+						}
+					}
+				}else{
+					if((stat2 & 0x0800000) == 0){
+						stat3 &= ~0x0010000;	//スクロール実績
+						stat2 |= 0x0800000;//右スクロールON
+						//Scroll();
+					}
 				}
 			} else if((stat & 0x40000) != 0 && (stat & 0x0100) == 0){
 				if(data[6] < nCacheTo[nCacheIndex]/*data[8]*/ - nCacheSt[nCacheIndex]/*data[7]*/){	//次のレスに行く
 					data[6]++;
 					if(data[84] > 0 && data[6] + data[84] == nCacheTo[nCacheIndex] - nCacheSt[nCacheIndex] && nCacheTo[nCacheIndex] < nCacheAll[nCacheIndex]){
 						stat3 |= 0x0000080;	//先読みをすることを示すフラグ
-						
+
 						stat3 |= 0x0000100;	//参照元を保存しない
 						strdata[8] = strdata[9];
 						httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
-						
+
 						//stat |= 0x0020000;	//Loading中のスレ読み
 					}
 					makeRes();
@@ -1665,7 +1724,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					httpinit(1,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex] + 1,nCacheTo[nCacheIndex] + data[0],0);
 				}
 			}
-		
+
 //				} else if(/*center*/(key & 0x100000) != 0 || /*5*/(key & 0x000020) != 0 ){	//選択ボタン
 //				} else if( (key & 0x100020) != 0 ){	//選択ボタン
 		} else if(action == FIRE || keyCode == KEY_NUM5){
@@ -1684,6 +1743,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else */
 				i = data[10] + data[11];
 				if((stat3 & 0x0000400) != 0){//ﾌﾞｯｸﾏｰｸメニュー
+					
 					if((stat & 0x0000400) != 0){	//設定した後
 						stat3 ^= 0x0000400;
 						i = data[67] + data[68];
@@ -1717,7 +1777,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 9 - data[19];
 					stat |= 0x1000000;	//画面更新
-					System.out.println("ｽﾚ覧");
+					Bugln("ｽﾚ覧\n");
 				} else if((stat4 & 0x0000400) != 0){	//7ｷｰの機能(ﾌﾞｸﾏ覧)設定後
 					stat4 ^= 0x0000400;
 					data[71] = data[10]+data[11];
@@ -1725,7 +1785,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 10 - data[19];
 					stat |= 0x1000000;	//画面更新
-					System.out.println("ﾌﾞｸﾏ覧");
+					Bugln("ﾌﾞｸﾏ覧\n");
 				} else if((stat4 & 0x0001000) != 0){	//7ｷｰの機能(ｽﾚ覧)設定後
 					stat4 ^= 0x0001000;
 					data[73] = data[10]+data[11];
@@ -1733,7 +1793,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 11 - data[19];
 					stat |= 0x1000000;	//画面更新
-					System.out.println("ｽﾚ覧");
+					Bugln("ｽﾚ覧\n");
 				}  else if((stat4 & 0x0008000) != 0){	//0ｷｰの機能設定後
 					stat4 ^= 0x0008000;
 					data[74] = data[10]+data[11];
@@ -1741,7 +1801,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 12 - data[19];
 					stat |= 0x1000000;	//画面更新
-					System.out.println("0ｷｰ");
+					Bugln("0ｷｰ\n");
 				} else if((stat2 & 0x0000020) != 0){	//その他
 					othermenu(i);
 					stat |= 0x1000000;	//画面更新
@@ -1775,7 +1835,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				//} else if((stat & 0x0000200) != 0){	//データフォルダの表示
 					//-/ReadDataFolder(data[10] + data[11]);
 					//-/stat |= 0x0400000;	//データフォルダの表示
-					
+
 					//-/stat &= ~0x0100;//if((stat & 0x0100) != 0){stat ^= 0x0100;}
 					//-/data[6] = 0;
 					//-/addCommand(command[0]);//メニュー
@@ -1808,7 +1868,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 					httpinit();*/
 					httpinit(1,(data[22] + data[23]) * 100 + i/*data[3]*/,1,data[0],0);
-					
+
 				} else if((stat & 0x02000) != 0){	//カテゴリ選択中の時
 /*
 					while(data[44] <= i){
@@ -1850,7 +1910,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			if((stat & 0x0000400) != 0){	//設定
 				addCommand(command[2]);
 			}
-			
+
 		} else if(keyCode == KEY_NUM7){
 			if( (stat & 0x10000) != 0){	//ｽﾚ選択中の時
 				stat4 |= 0x0000200;
@@ -1861,8 +1921,24 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat4 |= 0x0002000;
 				keyPressed(KEY_NUM5);
 			}
-
 			
+			if((stat2 & 0x0010000) != 0){//ﾌﾞｯｸﾏｰｸ
+				if(/*BookMarkData[i * 3 + 1] == 0 && */BookMark[(data[10]+data[11])].length() == 0){	//スレ番号＝0　板が登録されているor空
+
+				}else{
+					if(BookMarkData[(data[10]+data[11]) * 3 + 1] == 0){	//板
+						
+					}else{
+						stat4 |= 0x0080000;
+						data[67] = data[10];	data[68] = data[11];
+						data[10] = 0;	data[11] = 0;
+						stat3 |= 0x0000400;
+						keyReleased(KEY_NUM5);
+					}
+				}
+				
+			}
+
 		} else if(keyCode == KEY_STAR){
 			if( (stat & 0x0004000) != 0 ){	//板リストにいるとき
 				strdata[7] = "板番号:" + ((data[22] + data[23]) * 100 + data[10] + data[11]);//StrList[10][7] + StrList[10][19];
@@ -1885,7 +1961,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat2 |= 0x0004000;
 			}
 			stat |= 0x1000000;	//画面更新
-/*			
+/*
 
 */
 		} else if(keyCode == KEY_POUND){	//#
@@ -1915,12 +1991,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			stat ^= 0x0000400;
 			stat2 ^= 0x0000040;//0x0000100;	//数字
 			stat2 ^= 0x0002000;
+			zuzu[0] = data[28];
+			zuzu[1] = data[29];
 			if((stat2 & 0x0000800) != 0/*data[26] == 1*/){
-				httpinit( 2, i, data[28], data[28], j/*nThread[data[4]]*/);
+				httpinit( 2, i, zuzu[0], zuzu[0], j/*nThread[data[4]]*/);
 			} else if(data[29] == 0){
-				httpinit( 2, i, data[28], data[28] + data[1] - 1, j/*nThread[data[4]]*/);
+				httpinit( 2, i, zuzu[0], zuzu[0] + data[1] - 1, j/*nThread[data[4]]*/);
 			} else {
-				httpinit( 2, i, data[28], data[29], j/*nThread[data[4]]*/);
+				httpinit( 2, i, zuzu[0], zuzu[1], j/*nThread[data[4]]*/);
 			}
 		} else {
 			//NumSet();
@@ -1936,8 +2014,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 			stat2 &= ~0x0000800;	//0:-有り 1:-無し
 			data[27] = 5;	//選択している桁
-			data[28] = j;	//初期値(前半)
-			data[29] = 0;	//初期値(後半)
+			if(zuzu[0] != 0){
+				data[28] = zuzu[0];	//初期値(前半)
+				data[29] = zuzu[1];	//初期値(後半)
+			}else{
+				data[28] = j;	//初期値(前半)
+				data[29] = 0;	//初期値(後半)
+			}
 			strdata[2] = StrList[3][2];
 		}
 	}
@@ -2006,7 +2089,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else if((stat3 & 0x0200000) != 0){	//キーリピート
 					stat3 &= ~0x0200000;
 					int k = data[83];//key;
-					
+
 					//keyPressed(k);
 					while((stat2 & 0x2000000) != 0 && (getKeypadState() & k) != 0){
 						keyPressed(k);
@@ -2023,7 +2106,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 		};
 		thread.start();
-*/		
+*/
 	}
 	//キーリリース
 	/**
@@ -2047,7 +2130,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//	stat2 &= ~0x0400000;//左スクロールOFF
 			//} else if(action == RIGHT || keyCode == KEY_NUM6){
 			//	stat2 &= ~0x0800000;//右スクロールOFF
-			//} else 
+			//} else
 			if(action == FIRE || keyCode == KEY_NUM5){
 				int i = data[10] + data[11];
 				int j = data[67] + data[68];
@@ -2066,6 +2149,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							//}
 						}
 					}
+					if((stat4 & 0x0080000) != 0){
+						i = data[71];
+						stat4 ^= 0x0080000;
+					}
+
 					strdata[8] = BookMark[j];
 					bookmarkmenu(i,j);
 					if(i == 1){
@@ -2092,9 +2180,15 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat2 |= 0x0001000;
 				stat |= 0x1000000;	//画面更新
 */
-			} else if(keyCode == KEY_NUM9){
+			} else if(keyCode == KEY_NUM9){//パケット表示から先読みに変更
 				//if( (stat & 0x50000) != 0 ){	//ﾚｽ見てる時orｽﾚ選択中の時
-					viewcost();
+					//viewcost();
+					stat3 |= 0x0000080;	//先読みをすることを示すフラグ
+	
+					stat3 |= 0x0000100;	//参照元を保存しない
+					strdata[8] = strdata[9];
+					httpinit(2,nCacheBrd[nCacheIndex]/*data[3]*/,nCacheTo[nCacheIndex]/*data[8]*/ + 1,nCacheTo[nCacheIndex]/*data[8]*/ + data[1],nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/);
+
 					stat |= 0x1000000;	//画面更新
 				//}
 			} else if(keyCode == KEY_NUM0){
@@ -2131,7 +2225,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			if((data[49] & 0x02) != 0){//秒表示
 				byo = 2;
 			}
-			
+
 			if((data[57] & 0x00000008) != 0){
 				if(byo == 0){byo = 5;} else {byo += 6;}
 			}
@@ -2139,7 +2233,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			g.setFont(font);
 			if( (_stat & 0xF000000) != 0 ){//1+2+4+8
 				stat &= ~0xF000000;	//再描画フラグ消去
-				
+
 //				stat2 |= 0x0000040;//描画ロック
 				//Graphics g = getGraphics();
 				//g.lock();
@@ -2147,13 +2241,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					if( (_stat & 0x1000000) != 0 ){	//全体を再描画
 						g.setColor(ColScm[0],ColScm[1],ColScm[2]);//2chのスレ背景色 239,239,239
 						g.fillRect(0, data[30] + 3, width, height);
-						
+
 						if( (_stat & 0x0450000) != 0){// || (stat & 0x40000) != 0 ){	//ｽﾚ一覧の表示 or レスの表示
 //							g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//0,0,0
 //							if( (_stat & 0x10000) != 0 ){	//ｽﾚ一覧の表示
 								//if(nRes[data[5] % data[0]] >= 1000){i = 3;}else if(nRes[data[5] % data[0]] >= 100){i = 2;}else if(nRes[data[5] % data[0]] >= 10){i = 1;}else {i = 0;}
 //								i = GetDigits(nCacheBrdData[nCacheIndex][data[4]]/*nRes[data[4]]*/);
-								
+
 //								g.drawString(nCacheBrdData[nCacheIndex][data[4]]/*nRes[data[4]]*/ + "ﾚｽ", width - 6 - (i + 2) * data[33], data[12] - 1 - data[32], 68/*g.BASELINE|g.LEFT*/);
 //								i = data[5] - data[4] + 1;
 //								g.drawString("ｽﾚ" + (data[5] + 1) + "/" + i + "-" + (i + nCacheTh[nCacheIndex]/*nThread*/.length - 1), 6, data[12] - 1 - data[32], 68/*g.BASELINE|g.LEFT*/);
@@ -2213,14 +2307,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							}
 							if( 1 > sc && (_stat & 0x40000) != 0 ){	//１行目の名前欄を表示する場合
 								//i = GetDigits(data[6] + data[7]) - 1;
-								
+
 								g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//文字の色 0,0,0
 								g.drawString((data[6] + nCacheSt[nCacheIndex]/*data[7]*/) + ":", data[48], 4 - sc, 20/*g.TOP|g.LEFT*/);
 								g.setColor(ColScm[18],ColScm[19],ColScm[20]);//ﾚｽの名前 green
 								g.drawString(strdata[3]/*ResElements[0]*/, (GetDigits(data[6] + nCacheSt[nCacheIndex]/*data[7]*/) + 1) * data[33] + data[48], 4 - sc, 20/*g.TOP|g.LEFT*/);//名前
 							}
 							//}
-							
+
 							g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//文字の色 0,0,0
 							sc -= 4 + j;	//トップの余白1+ライン2+余白1+1行目用
 							if( (_stat & 0x0040000) != 0){	//レスの表示
@@ -2247,7 +2341,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						} else {
 							g.fillRect(10, data[12] + 2, width - 21, data[13] - 8);
 						}
-	*/					
+	*/
 						if((stat2 & 0x0004000) != 0){
 							g.setColor(ColScm[15],ColScm[16],ColScm[17]);	//ﾘｽﾄ選択色(Function) 255,165,0
 						} else {
@@ -2308,7 +2402,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								//if(data[26] == 0){
 								if((stat2 & 0x0000800) == 0){
 									i = GetDigits(data[29]);
-									
+
 									strdata[6] = "";
 									for(j = 0;j < 4 - i;j++){
 										strdata[6] = strdata[6] + "0";
@@ -2317,7 +2411,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								} else {
 									str += "     ";
 								}
-								
+
 								i = DrawBoxStr( g, data[50], data[51]+k, null, str, 4) + data[33] / 2;
 							} else if((stat2 & 0x0000100) != 0){//数字
 //									if(data[26] >= 1000){i = 4;}else if(data[26] >= 100){i = 3;}else if(data[26] >= 10){i = 2;}else {i = 1;}
@@ -2419,7 +2513,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 					}
 					g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//文字の色 0,0,0
-					
+
 					/*if( (stat & 0x00E0) == 0x0080 ){	//通信エラー
 						g.drawString("\ue6d1", 30, data[31]);//iマーク
 						g.drawString("×", 30, data[31]);//×マーク
@@ -2577,20 +2671,20 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 ////				graphics.drawImage( img2, 0, 0, 20/*g.TOP|g.LEFT*/);	//画面に転送
 //				stat2 ^= 0x0000040;//描画ロック解除
 			}
-			
+
 			if(byo != 0){//秒表示
 				calendar.setTime(new Date(System.currentTimeMillis()));
-				
+
 				//塗りつぶし
 				g.setColor(ColScm[0],ColScm[1],ColScm[2]);//2chのスレ背景色 239,239,239
 				g.fillRect(width - data[33] * byo - 2, 0, data[33] * byo + 2, data[30] + 1);
-				
+
 				if( (_stat & 0x7000000) != 0 ){
 					//区切り線
 					g.setColor(ColScm[9],ColScm[10],ColScm[11]);	//中間の濃さ 128,128,128
 					g.drawLine( width - data[33] * byo - 3, 0, width - data[33] * byo - 3, data[30]);
 				}
-				
+
 				g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//文字の色 0,0,0
 				if(byo == 2 || byo >= 7){
 					//秒の表示
@@ -2599,14 +2693,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						g.drawString(":", width-1-data[33] * 2, 1, 24/*g.TOP|g.RIGHT*/);
 					}
 				}
-				
+
 				if(byo >= 5){
 					//時・分の表示
 					//if(calendar.get(Calendar.HOUR_OF_DAY) < 10){byo--;}
 					g.drawString(calendar.get(Calendar.HOUR_OF_DAY) + ":" + (calendar.get(Calendar.MINUTE) / 10) + "" + (calendar.get(Calendar.MINUTE) % 10), width-1-data[33] * (byo - 5), 1, 24/*g.TOP|g.RIGHT*/);
 				}
 			}
-			
+
 
 
 			if (data[91] > 0 && data[91] < data[47] / 100){	//パケット代が設定された金額を超えている場合
@@ -2646,12 +2740,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//data[42] = width / data[33];	//一行の文字(byte)数
 			//return stmp[0] + "..";
 		}
-		
+
 		return str;
 	}
 	//mode == 0 : 通常動作
 	//mode > 1  : リンクのキャッシュチェック(リンクの箇所はmode - 1)
-	
+
 	/**
 	 * リンクを開くための処理
 	 * @param url リンクで開きたいアドレスを指定
@@ -2668,7 +2762,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				link = mode -1;
 			}
 			int n, to = -1;//, m = Linklist[link] / 1000;
-			
+
 //			j = m / 10000;	//リンクの文字数
 			//byte[] b = DivStr[(Linklist[link] / 1000) % 10000].getBytes();
 			url = Linkurllist[link];
@@ -2692,7 +2786,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					} else if(to > n/*from*/ + data[1] - 1){
 						to = n/*from*/ + data[1] - 1;
 					}
-				
+
 					/*
 					if(data[7] <= from && from <= data[8]){
 						data[6] = from - data[7];
@@ -2712,7 +2806,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 /*			 else {	//URL
 				Link(url);
-/*						
+/*
 				j = url.indexOf(".") + 1;
 				//System.out.println("<" + url + ">" + url.indexOf("2ch.net", k + 1) + " " + k + " " + url.indexOf("bbspink.com", k + 1));
 				if(url.indexOf("2ch.net", j) == j || url.indexOf("bbspink.com", j) == j){
@@ -2726,11 +2820,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 */
 		}
 		if(mode > 0){return;}
-		
+
 		j = url.indexOf(".") + 1;
 		//System.out.println("<" + url + ">" + url.indexOf("2ch.net", k + 1) + " " + k + " " + url.indexOf("bbspink.com", k + 1));
 		//URLジャンプ
-		
+
 		if(url.indexOf("www.2ch.net", j) == j || url.indexOf("www-2ch.net", j) == j || url.indexOf("2ch.net/ad.htm", j) == j || url.indexOf("mup.vip2ch.com") != -1 || url.indexOf("wktk.vip2ch.com") != -1 || url.indexOf("c-docomo.2ch.net") != -1){
 			url = url.substring(7);
 			//}
@@ -2850,7 +2944,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	public final void NumSet(){
 		stat2 &= ~0x0000F00;
-		
+
 		stat |= 0x0000400;
 		stat2 |= 0x0002100;	//下二つを結合
 		//stat2 |= 0x0000100;	//数字設定
@@ -3020,7 +3114,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //				ListBox[i] = "ｽﾚｯﾄﾞ検索";	i++;
 //				ListBox[i] = "編集";	i++;
 //				ListBox[i] = "消去";	i++;
-				
+
 //#ifdef 	//
 //				if((stat2 & 0x0004000) != 0){	//function
 //					ListBox[i] = "隙間を詰める";	i++;
@@ -3049,14 +3143,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	public final void ChangeBookMark(int n1,int n2){//ブックマークの位置を交換
 		int i;
 		String str;
-		
+
 		str = BookMark[n1];
 		BookMark[n1] = BookMark[n2];
 		BookMark[n2] = str;
 		str = tBookMark[n1];
 		tBookMark[n1] = tBookMark[n2];
 		tBookMark[n2] = str;
-		
+
 		i = BookMarkData[n1 * 3];
 		BookMarkData[n1 * 3] = BookMarkData[n2 * 3];
 		BookMarkData[n2 * 3] = i;
@@ -3116,7 +3210,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			return mode;
 		} else if(mode > 0){	//add or replace
 			mode--;
-			
+
 			if(str.getBytes().length > 140){str = str.substring( 0, 70);}
 			BookMark[mode] = str;
 			tBookMark[mode] = trimstr(BookMark[mode], width - 29);
@@ -3152,7 +3246,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	public final synchronized void chkcache(){
 		int i;
-		
+
 		if((stat & 0x40000) != 0){//res
 			if(data[6] == nCacheTo[nCacheIndex] - nCacheSt[nCacheIndex]){	//今読んでいるキャッシュの中で最後
 				stat3 &= ~0x0808000;
@@ -3297,7 +3391,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							w += data[61];
 						}
 					}
-					
+
 					outarray.write(b[i]);	i++;
 					outarray.write(b[i]);
 				} else {//1byte
@@ -3401,7 +3495,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		resdata = b;
 
 		//if(resdata.indexOf(ngword) != -1){
-		
+
 		/*if(ngword.indexOf('|') != -1){
 			int ngi = 0;
 			int abon = 0;
@@ -3467,13 +3561,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//DOJA
 		//resstr = resstr + "\r\ue6b1 "/*StrList[10][15]*/ + ResElements[0] + "\r\ue6d3 " + ResElements[1] + "\r\ue6ba "/*StrList[10][16]*/ + ResElements[2];
 		j = i;
-		
+
 		//str = "\ue6b1 ";
 		b2 = Emoji[0].getBytes();//str.getBytes();
 		outarray.write(b2, 0, b2.length);
 		data[86] += 2;
 		i = SubMaRE(b, i, 3);
-		
+
 		//outarray.write(b, j, i - j - 1);
 		//ResElements[0] = outarray.toString();	//名前
 		strdata[3] = new String(b, j, i - j - 1);	//名前
@@ -3484,8 +3578,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			System.out.print(name_a[i_a]);
 			i_a = data[42];
 		}*/
-		
-		
+
+
 		b2 = Emoji[1].getBytes();//str.getBytes();
 		outarray.write(b2, 0, b2.length);
 		data[86] += 2;
@@ -3522,7 +3616,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//DivStr = alist.toArray();
 		//data[85]--;
 		resstr = outarray.toString();
-		
+
 
 
 		if((stat2 & 0x0000002) == 0){	//表示設定ではないとき
@@ -3540,7 +3634,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		}
 		//data[65] = 0;	//Linkの選択スキップ分
 		chkcache();	//キャッシュチェック
-		
+
 		stat |= 0x1000000;	//画面更新
 
 	}
@@ -3591,7 +3685,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					addDivStr();
 					w = 2;
 				}
-				
+
 				outarray.write(b[i]);	i++;
 				outarray.write(b[i]);
 			} else if(b[i] == '\r'/* || b[i] == '\n'*/){
@@ -3608,7 +3702,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						addDivStr();
 						w = 1;
 					}
-					
+
 					//if(w != 0){addDivStr();	w = 0;}
 					stat3 |= 0x0000001;	data[63] = data[85];
 					Linklist2[data[59]] = data[86];
@@ -3641,7 +3735,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						i++;
 					}
 					outarray.write(104);	//h
-					
+
 					w += 3;
 					outarray.write(b[i]);	i++;//	w++;	//t
 					outarray.write(b[i]);	i++;//	w++;	//t
@@ -3684,7 +3778,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //				}
 //			}
 //		}
-		
+
 		if(w != 0){
 			//alist.addElement(outarray.toString());
 			addDivStr();
@@ -3694,7 +3788,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //		System.out.println("i:" + i);
 		return i;
 	}
-	
+
 	public final void addDivStr2(){
 		DivStr[data[85]] = outarray.toString();	data[85]++;
 		outarray.reset();
@@ -3707,7 +3801,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			DivStr = tmp;
 		}
 	}
-	
+
 	public final void addDivStr(){
 		if(data[85] == 0){
 			iDivStr[data[85]] = data[86];/*outarray.size()*/
@@ -3725,9 +3819,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			iDivStr = tmp;
 		}
 
-		
+
 	}
-	
+
 	/**
 	 * リンク用配列にリンクを追加。リンクの指定は全てグローバル変数を使用。
 	 */
@@ -3743,7 +3837,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//	tmp[i] = Linklist[i];
             System.arraycopy(Linklist, 0, tmp, 0, data[59]);
 			Linklist = tmp;
-			
+
 			tmp = new int[Linklist.length*2];
             System.arraycopy(Linklist2, 0, tmp, 0, data[59]);
 			Linklist2 = tmp;
@@ -3752,7 +3846,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			Linkurllist = tmp2;
 		}
 	}
-	
+
 	/**
 	 * 表示している領域にリンクがあるかどうかを判定？
 	 */
@@ -3777,7 +3871,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		}
 */
 	}
-	
+
 	/**
 	 * ボックスの形での文字列表示処理
 	 * @param g Graphics
@@ -3797,16 +3891,16 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			ret = x + i / 2;//- i / 2 + i;
 		}
 		int len = str.length;
-		
+
 		if(i % 2 == 1){i++;}
 		x -= i / 2;
 		y -= data[30]*len/2;
-		
+
 		g.setColor(ColScm[6],ColScm[7],ColScm[8]);	//薄い色 192,192,192
 		g.fillRect( x + 1, y - 1 - yspace, i + 3, data[30]*len + 4 + yspace * 2);
 		g.setColor(ColScm[0],ColScm[1],ColScm[2]);//2chのスレ背景色 239,239,239
 		g.fillRect( x - 1, y - 2 - yspace, i + 2, data[30]*len + 2 + yspace * 2);
-		
+
 		g.setColor(ColScm[9],ColScm[10],ColScm[11]);	//中間の濃さ 128,128,128
 		g.drawRect( x - 2, y - 3 - yspace, i + 3, data[30]*len + 3 + yspace * 2);
 		//角を丸める
@@ -3814,7 +3908,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//g.drawLine( x - 1, y + data[30]*len + yspace, x + i, y + data[30]*len + yspace);//下
 		//g.drawLine( x - 2, y - 2 - yspace, x - 2, y + data[30]*len + yspace - 1);//左
 		//g.drawLine( x + i + 1, y - 2 - yspace, x + i + 1, y + data[30]*len + yspace);//右
-		
+
 		g.setColor(ColScm[3],ColScm[4],ColScm[5]);	//文字の色 0,0,0
 		for(i = 0;i < len;i++){
 			g.drawString(str[i], x, y + data[30] * i - 1, 20/*g.TOP|g.LEFT*/);
@@ -3828,15 +3922,15 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	public final void SetFont(){
 		int i;
 		if(data[36] == 0){	//SMALL
-			font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_SMALL);
-			/*if(data[98] == 0){
+			//font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_SMALL);
+			if(data[98] == 0){
 				if(data[99] == 0){ //PLAIN
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_PLAIN,font.SIZE_SMALL);
 				}else if(data[99] == 1){
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_PLAIN,font.SIZE_SMALL);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_PLAIN,font.SIZE_SMALL);
-				}	
+				}
 			}else if(data[98] == 1){ //BOLD
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_BOLD,font.SIZE_SMALL);
@@ -3844,7 +3938,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_BOLD,font.SIZE_SMALL);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_BOLD,font.SIZE_SMALL);
-				}	
+				}
 			}else if(data[98] == 2){
 				if(data[99] == 0){ //ITALIC
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_ITALIC,font.SIZE_SMALL);
@@ -3852,19 +3946,19 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_ITALIC,font.SIZE_SMALL);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_ITALIC,font.SIZE_SMALL);
-				}	
-			}*/
-			
+				}
+			}
+
 		} else if(data[36] == 2) {	//LARGE
-			font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_LARGE);
-			/*if(data[98] == 0){
+			//font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_LARGE);
+			if(data[98] == 0){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_PLAIN,font.SIZE_LARGE);
 				}else if(data[99] == 1){
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_PLAIN,font.SIZE_LARGE);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_PLAIN,font.SIZE_LARGE);
-				}	
+				}
 			}else if(data[98] == 1){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_BOLD,font.SIZE_LARGE);
@@ -3872,7 +3966,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_BOLD,font.SIZE_LARGE);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_BOLD,font.SIZE_LARGE);
-				}	
+				}
 			}else if(data[98] == 2){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_ITALIC,font.SIZE_LARGE);
@@ -3880,18 +3974,18 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_ITALIC,font.SIZE_LARGE);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_ITALIC,font.SIZE_LARGE);
-				}	
-			}*/
+				}
+			}
 		} else {//if(data[36] == 1){	//MIDIUM
-			font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_MEDIUM);
-			/*if(data[98] == 0){
+			//font = Font.getFont(Font.FACE_MONOSPACE,Font.STYLE_BOLD,Font.SIZE_MEDIUM);
+			if(data[98] == 0){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_PLAIN,font.SIZE_MEDIUM);
 				}else if(data[99] == 1){
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_PLAIN,font.SIZE_MEDIUM);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_PLAIN,font.SIZE_MEDIUM);
-				}	
+				}
 			}else if(data[98] == 1){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_BOLD,font.SIZE_MEDIUM);
@@ -3899,7 +3993,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_BOLD,font.SIZE_MEDIUM);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_BOLD,font.SIZE_MEDIUM);
-				}	
+				}
 			}else if(data[98] == 2){
 				if(data[99] == 0){
 					font = font.getFont(font.FACE_SYSTEM,font.STYLE_ITALIC,font.SIZE_MEDIUM);
@@ -3907,14 +4001,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					font = font.getFont(font.FACE_MONOSPACE,font.STYLE_ITALIC,font.SIZE_MEDIUM);
 				}else if(data[99] == 2){
 					font = font.getFont(font.FACE_PROPORTIONAL,font.STYLE_ITALIC,font.SIZE_MEDIUM);
-				}	
-			}*/
+				}
+			}
 		}
 		data[30] = font.getHeight();
 		if(data[30] % 2 == 1){
 			data[30]++;
 		}
-		
+
 		data[31] = font.getBaselinePosition();
 		data[32] = font.getHeight() - font.getBaselinePosition();
 		data[33] = font.charWidth('M');
@@ -3927,7 +4021,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			tBookMark[i] = trimstr(BookMark[i], width - 29);
 		}
 	}
-	
+
 	/**
 	 * 矢印代わりの三角形を描画
 	 * @param g Graphics
@@ -3945,12 +4039,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 		}
 	}
-	
+
 	/**
 	 * 通信処理の入り口。ここからthttpget()に飛んでさらにhttpgetdata()に飛ぶ
 	 * @param mode 0:板一覧の読込 1:スレッドリスト 2:レス (3:Menu) 4:スレ検索 5:URL直接指定 6:板のURLを取得 7:書き込み処理 11:スレッドリスト(キャッシュチェック) 12:レス(キャッシュチェック)
 	 * @param brd board
-	 * @param st start(1～) 
+	 * @param st start(1～)
 	 * @param to end
 	 * @param th thread
 	 * @see MainCanvas#thttpget()
@@ -4111,7 +4205,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//sbuf.append(brd);
 		} else if(mode == 7){//書き込み
 			String message;
-			message = bboard.getString();//.replace( ',', '\n');
+			//message = bboard.getString();//.replace( ',', '\n');
 			//bodytext = message;
 			/*while(true){
 				i = message.indexOf("\\,");	if(i < 0){break;}
@@ -4134,20 +4228,20 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				message = message.substring(0,i) + "%2B" + message.substring(i+1);
 			}*/
 			//message = message.replace( ',', '\n');
-			message = com.j_phone.io.URLEncoder.encode(message);
+			message = com.j_phone.io.URLEncoder.encode(bboard.getString());
 			name = btitle.getString();
 			mail = bres.getString();
 			//書き込みデータ作成
 			if(strdata[0].indexOf("kakiko.com") != -1){
-				strdata[5] = "key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書き込み&bbs=" + bbsname + "&time=" + th/*System.currentTimeMillis()/1000*/  + "&get=1&MIRV=kakkoii";
+				strdata[5] = "key=" + th + "&FROM=" + com.j_phone.io.URLEncoder.encode(name) + "&mail=" + com.j_phone.io.URLEncoder.encode(mail) + "&MESSAGE=" + message + "&submit=%8f%91%82%ab%8d%9e%82%de&bbs=" + bbsname + "&time=" + th/*System.currentTimeMillis()/1000*/  + "&get=1&MIRV=kakkoii";
 				//sbuf.append("key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書き込み&bbs=" + bbsname + "&time=" + th/*System.currentTimeMillis()/1000*/  + "&get=1&MIRV=kakkoii");
 				//StringBuffer sbuf = new StringBuffer("key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書き込み&bbs=" + bbsname + "&time=" + th/*System.currentTimeMillis()/1000*/  + "&get=1&MIRV=kakkoii");
 			}else if(strdata[0].indexOf("vip2ch.com") != -1){
-				strdata[5] = "key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1&hana=mogera";
+				strdata[5] = "key=" + th + "&FROM=" + com.j_phone.io.URLEncoder.encode(name) + "&mail=" + com.j_phone.io.URLEncoder.encode(mail) + "&MESSAGE=" + message + "&bbs=" + bbsname + "&time=" + th + "&suka=pontan&submit=%8F%E3%8BL%91S%82%C4%82%F0%8F%B3%91%F8%82%B5%82%C4%8F%91%82%AB%8D%9E%82%DE";
 //				sbuf.append("key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1&hana=mogera");
 				//StringBuffer sbuf = new StringBuffer("key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1&hana=mogera");
 			}else{
-				strdata[5] = "key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1";
+				strdata[5] = "key=" + th + "&FROM=" + com.j_phone.io.URLEncoder.encode(name) + "&mail=" + com.j_phone.io.URLEncoder.encode(mail) + "&MESSAGE=" + message + "&submit=%8f%91%82%ab%8d%9e%82%de&bbs=" + bbsname + "&time=" + th + "&get=1";
 //				sbuf = "key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1");
 				//StringBuffer sbuf = new StringBuffer("key=" + th + "&FROM=" + name + "&mail=" + mail + "&MESSAGE=" + message + "&submit=書&bbs=" + bbsname + "&time=" + th + "&get=1");
 			}
@@ -4156,6 +4250,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			if(mode == 0 || mode == 3){
 				data[78] = 0x00000008;	//一般のダウンロード
 			} else {
+				Bugln("ThreadView...");
 				data[78] = 0x00000002;	//スレッドリスト
 				if(mode == 5){
 					data[78] = 0x00000004;	//サーバーが選択
@@ -4175,7 +4270,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						if(mode == 1){to = st + data[0] - 1;}
 						if(mode == 2 && st > 0){to = st + data[1] - 1;}
 					}
-					
+
 					if(st > 0 && ! (st == 1 && to == 10)){
 						//strdata[5] = strdata[5] + "&c=s" + st + "t" + to;
 						sbuf.append("&c=s");
@@ -4189,6 +4284,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						sbuf.append(to);
 					}
 				} else {	//スレ検索
+					Bugln("ThreadSearch...");
 					//strdata[5] = strdata[5] + "&m=s&b=" + brd + "&w=" + strdata[6];
 					sbuf.append("&m=s&b=");
 					sbuf.append(brd);
@@ -4196,6 +4292,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					sbuf.append(strdata[6]);
 				}
 				if(mode == 2){	//レス表示の時のみ
+					Bugln("ResView...");
 					data[78] = 0x00000001;	//レス
 					//strdata[5] = strdata[5] + "&t=" + th;
 					sbuf.append("&t=");
@@ -4227,18 +4324,18 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				if((data[49] & 0x08) == 0){sbuf.append("t");}//strdata[5] = strdata[5] + "t";}
 				if((data[49] & 0x10) == 0){sbuf.append("m");}//strdata[5] = strdata[5] + "m";}
 				if((data[49] & 0x40) != 0){sbuf.append("n");}//strdata[5] = strdata[5] + "n";}
-				
+
 				i = data[87] & 0xFF;
 				if(i == 2){sbuf.append("a");//strdata[5] = strdata[5] + "a";
 				} else if(i > 2){sbuf.append("a" + i);}//strdata[5] = strdata[5] + "a" + i;}
 				//if((data[57] & 0x00000002) == 0){strdata[5] = strdata[5] + "a";}
-				
+
 				i = (data[87] & 0xFF00) >> 8;
 				if(i == 2){sbuf.append("u");//strdata[5] = strdata[5] + "u";
 				} else if(i > 2){sbuf.append("u" + i);}//strdata[5] = strdata[5] + "u" + i;}
 				//if((data[57] & 0x00004000) != 0){strdata[5] = strdata[5] + "u2";
 				//} else if((data[57] & 0x00000004) == 0){strdata[5] = strdata[5] + "u";}
-				
+
 				if((data[57] & 0x00002000) != 0){sbuf.append("r");}//strdata[5] = strdata[5] + "r";}	//透明削除対策
 			}
 			//拡張オプション
@@ -4251,7 +4348,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //#ifdef DEBUG
 //		System.out.println(server + "2.cgi?"+strdata[5]);
 //#endif
-		
+
 		//data[82] = data[82] * 10;
 		///System.out.println("1/3倍化:" + data[82]);
 		if(mode == 0){
@@ -4263,11 +4360,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		} else if(mode == 6 || mode == 7) {
 			data[78] = 0x00000208;	//一般のダウンロード,iMonaヘッダ無し
 			if(mode == 6){
+				Bugln("Other...");
 				//data[78] = 4;	//一般のダウンロード(ヘッダ無し)
-				
+
 				data[79] = brd;
 				strdata[1] = null;
 			} else if(mode == 7){//書き込み
+				Bugln("Writing...\n");
 				data[78] |= 0x00000010;	//書き込み
 				//data[78] = 5;	//書き込み
 			}/* else if(mode == 13){//AAS
@@ -4284,12 +4383,17 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						//strdata[7] = new String(dlarray);
 						//stat2 |= 0x0001000;
 						if((data[78] & 0x00000010) != 0){//書き込み
+							Bugln("Ok!\n");
+							stat2 |= 0x0001000;
 							if((new String(dlarray)).indexOf("書きこみました") != -1 || (new String(dlarray)).indexOf("<!-- 2ch_X:true -->") != -1 || (new String(dlarray)).indexOf("<!-- 2ch_X:false -->") != -1){
-								msgbox("書込完了");
+								strdata[7] = "書込完了";
+								Bugln("Writing=Complete!\n");
 								bodytext = "";
 								//addNamelist(btitle.toString());
 							} else if((new String(dlarray)).indexOf("規約") != -1){
-								msgbox("書込失敗(規約)");			
+								strdata[7] = "書込失敗(規約)";
+								Bugln("Writing=Kiyaku!\n");
+								viewwritepanel();
 							} else if((new String(dlarray)).indexOf("ＥＲＲＯＲ") != -1) {
 								String errortext;
 								int start, end;
@@ -4297,10 +4401,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								//<b>ＥＲＲＯＲ：本文がありません！</b>
 								start = errortext.indexOf("<b>") + 3 + 12;
 								end  = errortext.indexOf("</b>");
-								msgbox("書込失敗\n" + errortext.substring(start,end));
+								strdata[7] = "書込失敗\n" + errortext.substring(start,end);
+								Bugln("Writing=Error!\n");
+								Bugln(errortext + "\n");
 								//strdata[7] = "書込失敗:" + errortext.substring(start,end);
+								viewwritepanel();
 							} else {
-								msgbox("原因不明な書込失敗");
+								Bugln("Writing=UnknownError!\n");
+								strdata[7] = "原因不明の書込失敗";
 								/*try{
 									String buf;
 									buf = new String(dlarray);
@@ -4311,6 +4419,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 									disp.setCurrent(tbox);
 								} catch(Exception e){
 								}*/
+								viewwritepanel();
 							}
 							//stat2 |= 0x0001000;
 						}/* else if(data[72] == 1){ //AAS
@@ -4331,7 +4440,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							if((stat4 & 0x0040000) != 0){
 								stat4 ^= 0x0040000;
 								viewwritepanel();
+								Bugln("WritingUrlGet\n");
 							}else{
+								Bugln("AASUrlGet\n");
 								String buf = "";
 								strdata[0] = strdata[1];
 								if(strdata[0].charAt(strdata[0].length() - 1) == '/'){
@@ -4352,7 +4463,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								openbrowser(buf,1);
 							}
 						}
-					
+
 					}
 					stat |= 0x1000000;	//画面更新
 					//stat &= ~0x0001000;	//板一覧取得中
@@ -4360,7 +4471,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			};
 			thread.start();
 		} else {
-		
+
 			Linkref[0] = brd;
 			Linkref[1] = th;
 			Linkref[2] = st;
@@ -4380,7 +4491,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		stat2 &= ~0x0004000;	//function解除
 		stat |= 0x1000000;	//画面更新
 	}
-	
+
 	/**
 	 * 書込画面を表示
 	 */
@@ -4394,6 +4505,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		i = strdata[0].lastIndexOf( '/', strdata[0].length() - 1);
 		bbsname = strdata[0].substring(i + 1);
 		strdata[0] = strdata[0].substring( 0, i);
+		Bugln("*WritingUrlState\n" + "strdata[0]:" + strdata[0] + "\nbbsname:" + bbsname + "\ni:" + i + "\n");
 		btitle = new LocalizedTextField("名前",name,1024,LocalizedTextField.ANY);
 		bres = new LocalizedTextField("E-mail",mail,1024,LocalizedTextField.ANY);
 		bboard = new LocalizedTextField("内容",bodytext,4096,LocalizedTextField.ANY);
@@ -4425,7 +4537,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//1  0  > OFF
 	//0  1  > ON
 	//0  0  > OFF
-	
+
 	/**
 	 * スクロール処理
 	 */
@@ -4449,7 +4561,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//m:一つ前or次のリンクの行
 			//n:書き始め
 			//k:これ以上は表示されないので書かない
-			
+
 			if( (stat & 0x0100000) != 0 ){//上スクロールON
 	//			if(data[65] > 0){	//Linkの選択スキップ分
 	//				data[65]--;
@@ -4566,7 +4678,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			stat |= 0x1000000;	//画面更新
 		}
 	}
-	
+
 	/**
 	 * 待機処理
 	 * @param w ミリ秒で待機時間
@@ -4574,7 +4686,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	public final void wait(int w){
 		try{Thread.sleep(w);}catch (Exception e){}
 	}
-	
+
 	/**
 	 * ran。いわゆる最初に実行されるメソッドでここの中をぐるぐる回る
 	 */
@@ -4632,16 +4744,16 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		int i, j = 0, k = 0, n = 0;
 		//int mode = 0;//1:レスの取得(3:+タイトル) 2:スレ一覧の取得(4:+タイトル)
 		//int t1 = 0, t2 = 0;//テンポラリ t1:スレ番号 t2:板番号
-		
+
 		int rc = 0;	//response code
-		
+
 		while( (stat & 0x10000000) != 0 ){}
 		//System.out.println("http");
 		if( (stat & 0x0010) == 0 ){	//通信中ではない
 			return;
 		}
 		int mode = data[78];
-		
+
 		//String url = new String("http://localhost:81/i2ch/2.cgi");
 		//HttpConnection co = null;
 		InputStream in = null;
@@ -4661,6 +4773,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//HttpConnection co = (HttpConnection)Connector.open("http://localhost:81/i2ch/2.cgi",Connector.READ_WRITE,true);
 
 			if((mode & 0x00000010) != 0){	//書き込み
+				Bugln("WritingUrl:" + "http://" + strdata[0] + "/test/bbs.cgi\n");
 				co = (HttpConnection)Connector.open("http://" + strdata[0] + "/test/bbs.cgi",Connector.READ_WRITE,true);
 			} else {
 				co = (HttpConnection)Connector.open(server + "2.cgi",Connector.READ_WRITE,true);
@@ -4672,8 +4785,24 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 			//HTTPヘッダを書き込み
 			if((mode & 0x00000010) != 0){	//書き込み
-				co.setRequestProperty("Referer",
-				"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + BookMarkData[(data[67] + data[68]) * 3 + 1] + "/");
+				if( (stat & 0x40000) != 0 ){	//ﾚｽ見てる時
+					Bugln("WritingReferer:" + "http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/\n");
+					co.setRequestProperty("Referer",
+							"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/");
+				} else if((stat2 & 0x0010000) != 0){	//ブックマーク
+					Bugln("WritingReferer:" + "http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + BookMarkData[(data[67] + data[68]) * 3 + 1] + "/\n");
+					co.setRequestProperty("Referer",
+							"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + BookMarkData[(data[67] + data[68]) * 3 + 1] + "/");
+				}
+				co.setRequestProperty("User-Agent",
+						"Monazilla/1.00");
+				co.setRequestProperty("Cookie", 
+						cookie);
+				
+
+				/*if(strdata[0].indexOf("vip2ch.com") != -1){
+
+				}*/
 			}
 			//data[16] = 0;
 			//OutputStreamへ送るデータを入れる
@@ -4684,7 +4813,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			if((stat & 0x0080000) != 0){//通信ストップ要求
 				throw new Exception();
 			}
-//#ifdef 
+//#ifdef
 			rc = co.getResponseCode();
 //#endif
 			errorcode++;	//通信のエラーコード1
@@ -4788,30 +4917,37 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	*/
 				}
 				outstr.reset();
-//#ifdef 
+//#ifdef
 //				errorcode++;	//通信のエラーコード4
 //#endif
 				k = 1;	data[15]++;
 				if(0 <= d1[0] && d1[0] <= 0x0F){
 					if(d1[0] == 0x00/*'0'*/){
-						strdata[7] = "なんらかのｴﾗｰ";//StrList[10][5]; 
+						strdata[7] = "なんらかのｴﾗｰ";//StrList[10][5];
 					} else if( d1[0] == 0x01/*'A'*/ ){	//新レスがない
 						strdata[7] = "新ﾚｽはありません";//StrList[10][4] + StrList[10][18];
+						Bugln("Ok\n");
 					} else if( d1[0] == 0x02/*'B'*/ ){	//spdv->2chへの接続エラー
 						strdata[7] = "通信ｴﾗｰ(2ch)";
+						Bugln("Ok\n");
 					} else if( d1[0] == 0x03 ){	//検索で何も見つからなかったとき
 						strdata[7] = "No hit...";
+						Bugln("Ok\n");
 					} else if( d1[0] == 0x04 ){	//DAT落ち
 						strdata[7] = "DAT落ち";
+						Bugln("Ok\n");
 					} else if( d1[0] == 0x05 ){	//人多杉
 						strdata[7] = "人多杉";
+						Bugln("Ok\n");
 					} else if( d1[0] == 0x06){//中間鯖移転&削除
 						strdata[7] = "中間鯖が移転したみたい";
 					} else {// if( 0x06 <= d1[0] && d1[0] <= 0x0F ){	//サポートされていないエラー
 						strdata[7] = "その他のｴﾗｰ";//StrList[10][4] + StrList[10][18];
+						Bugln("Ok\n");
 					}
 					stat2 |= 0x0001000;
 				} else {
+					Bugln("Ok\n");
 					//キャッシュに追加
 					if((mode & 0x00000003) != 0){
 						//全てのキャッシュのTTLを1増やし、TTLが一番大きい又は無効であるキャッシュを選択する
@@ -4864,7 +5000,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							} else {
 								data[14] = j;	//len
 							}
-							
+
 							outstr.reset();
 						} else if(d1[0] == 0x0A){//\n
 							j = to10(outstr.toByteArray());
@@ -4896,7 +5032,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			outstr = new ByteArrayOutputStream(data[18] + 50);
 			errorcode++;	//通信のエラーコード4
 			//rbyte = 0;
-			
+
 			//data[14] += data[15] + 1;	//全体の読み込むバイト数
 			while(true){	//データの取得 & 単純置き換え圧縮 & ランレングス圧縮を展開
 				if((stat & 0x0080000) != 0){//通信ストップ要求
@@ -4913,6 +5049,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//通信終了処理
 			in.close();//読み出し終了
 			co.close();//通信終了
+			/*if((mode & 0x00000010) != 0){	//書き込み
+				if(co.getHeaderField("Set-Cookie").indexOf("PON") != -1){
+					
+				}
+			}*/
 			///System.out.println("UP:1");
 			stat |= 0x0080;	//受信完了	httpstat = 4;
 		//} catch(UnsupportedEncodingException e) {
@@ -4938,10 +5079,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//stat |= 0x0200;	//test
 			//stat |= 0x0080;
 		}
+
 		//空きメモリ確保
 		in = null;
 		co = null;
-
+		
+		
 		stat3 &= ~0x0000004;	//LinkON(URL)でジャンプしたことを示すフラグ
 	//if((stat & 0x1000) != 0){	//板データダウンロード時
 		//スクラッチパッドから板データを取得する
@@ -4950,12 +5093,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//calccost();
 		//int value = data[15];
 		i = data[15];
-		
+
 		if(data[17] != 0){
 			//value = data[17];
 			i = data[17];
 		}
-		
+
 		//if(value < 0)
 		//	return;
 		i += 500;	//パケット代の補正(ヘッダとか)
@@ -4977,6 +5120,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //			}
 			if( (stat & 0x00F0) == 0x00F0 ){	//ＤＬ終了(成功)
 				byte[] inbyte;
+				zuzu[0] = 0; //レス番号指定を0にする。
 
 				//スレ又はレスのダウンロード
 				if((mode & 0x00000003) != 0){
@@ -5014,7 +5158,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								stat2 |= 0x80000000;	//makeResで初期化を行う
 								makeRes();
 								stat |= 0x10000000;	//通信後の処理中
-								
+
 								//終了処理
 								stat &= ~0x0000014;	//通信解除andキーストップ解除
 								//stat &= ~0x0000004;	//キーストップ解除
@@ -5037,11 +5181,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					nCacheBrdData[n]/*nRes*/		= new int[i];
 					nCacheTh[n]/*nThread*/			= new int[i];
 					byte[] bArray;
-					
+
 					nCacheSt[n] = Linkref[2];
 					nCacheTo[n] = Linkref[2] + i - 1;
 /*
-*/						
+*/
 					j = 0;	k = 0;
 					for(i = 1;i < inbyte.length;i++){
 						if(inbyte[i] == 0x09){
@@ -5076,7 +5220,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							//data[4] = 0;
 							data[77] = 0;
 							//data[10] = 0;data[11] = 0;
-							
+
 							//stat ^= 0x8000;	///スレ一覧ＤＬ中解除
 							//if((stat3 & 0x0000020) == 0){	//ブックマークから板にジャンプした
 							//	data[5] = BookMarkData[(data[67] + data[68]) * 3 + 2];	//レス
@@ -5105,7 +5249,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						makeTL();
 					}
 					//stat3 &= ~0x0000080;	//板一覧が無効(再読込が必要)を解除。
-					
+
 				} else if((mode & 0x00000018) != 0/*data[78] == 3 || data[78] == 4 || data[78] == 5*/){
 					dlarray = outstr.toByteArray();
 				} else if((mode & 0x00000001) != 0){
@@ -5132,13 +5276,23 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 				} else if( (stat2 & 0x0001000) == 0 ){	//まだ何も表示されていない場合
 					//strdata[7] = null;
-					StrList[15] = new String[3];
-					StrList[15][0] = "通信失敗(" + errorcode + "," + rc + ")";
-					StrList[15][1] = strdata[11].substring(5);
-					StrList[15][2] = "";
-					i = strdata[11].indexOf(' ');
-					if(i > 0){
-						StrList[15][2] = strdata[11].substring(i+1);
+					Bugln("Error!\n");
+					if(rc == 503){
+						StrList[15] = new String[3];
+						StrList[15][0] = "通信失敗";
+						StrList[15][1] = "中間サーバーが";
+						StrList[15][2] = "混んでいます。";
+						Bugln("Message:503Error\n");
+					}else{
+						StrList[15] = new String[3];
+						StrList[15][0] = "通信失敗(" + errorcode + "," + rc + ")";
+						StrList[15][1] = strdata[11].substring(5);
+						StrList[15][2] = "";
+						i = strdata[11].indexOf(' ');
+						if(i > 0){
+							StrList[15][2] = strdata[11].substring(i+1);
+						}
+						Bugln("Message(" + errorcode + "):" + strdata[11] + "\n");
 					}
 					stat2 |= 0x0001000;
 				}
@@ -5159,7 +5313,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//bagdata = bagdata + "\r\n" + e.toString();
 			stat2 |= 0x0001000;
 		}
-		
+
 		//if((stat & 0x0000004) != 0){stat ^= 0x0000004;}	//キーストップ解除
 		//data[82] = data[82] / 10;
 		///System.out.println("3倍化:" + data[82]);
@@ -5175,7 +5329,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//stat &= ~0x10000000;	//通信後の処理中解除
 		//System.gc();	//ガベージコレクション
 	}
-	
+
 	//10+26+26
 	//240進数->10進数
 	/**
@@ -5187,7 +5341,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		int i = b.length - 2;
 		int j = 240;
 		int ret = (b[i+1] & 0xFF) - 16;
-		
+
 		//System.out.println("i:" + (b[b.length - 1] & 0xFF) + "");
 		while(i >= 0){
 			//System.out.println("i:" + i + " N:" + ((b[i] & 0xFF) - 16) + " J:" + j);
@@ -5195,7 +5349,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			i--;	j = j * 240;
 		}
 
-		
+
 		return ret;
 	}
 
@@ -5216,13 +5370,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		strdata[7] = "ｸﾘｱ完了";
 		stat2 |= 0x0001000;
 	}
-	
+
 	/**
 	 * 計算、そして蓄積されるパケットのDLしたサイズや料金などを表示
 	 */
 	final void viewcost(){
 		int i = data[14];
-		
+
 		//strdata[7] = null;
 		StrList[15] = new String[8];
 		StrList[15][0] = "DLしたｻｲｽﾞ";
@@ -5254,7 +5408,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		StrList[15][7] += data[47] % 100 + "円";
 		stat2 |= 0x0001000;
 	}
-	
+
 
 	/**
 	 * 設定をロードする処理
@@ -5303,7 +5457,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			data[80] = isp.readByte() & 0xFF;	//gzip圧縮率
 			data[84] = isp.readInt();	//o 84 先読み機能で先読みを行うレス数
 			if(data[84] > 1000){data[84] = 1000;}
-			
+
 			data[87] = isp.readInt();	//o 87 数値の設定
 			if((data[87] & 0xFF) == 0){if((data[57] & 0x00000002) != 0){data[87] = 1;} else {data[87] = 2;}}
 			if((data[87] & 0xFF00) == 0){if((data[57] & 0x00000004) != 0){data[87] |= 0x0100;} else {data[87] |= 0x0200;}}
@@ -5335,11 +5489,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				ngword = new String(b);
 			}*/
 			isp.close();
-			
+
 
 		} catch(Exception e){
 			//System.out.println("Default");
-			
+
 			//デフォルト設定(初回起動時)//////
 			data[0] = 10;	//スレの一度に読み込む数
 			data[1] = 15;	//レスの一度に読み込む数
@@ -5358,7 +5512,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //			data[57] = 0x00004001;
 //			data[57] = 0x0000C001;
 			data[57] = 0x00024201;
-			
+
 			//設定ここまで/////////////////////
 		}
 		if( (data[57] & 0x00000001) == 0 ){
@@ -5384,7 +5538,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//ブックマーク
 		try {
 			int nbookmark = 0;	//ブックマークの数を数えるために使用。
-			
+
 			recordStore = RecordStore.openRecordStore("Bookmark", false);
 			b = recordStore.getRecord(1);
 			data[40] = b[0] * 127 + b[1];
@@ -5413,17 +5567,17 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					nbookmark = i + 1;
 				}
 			}
-			
+
 			for(i = data[66];i < data[40];i++){
 				BookMark[i] = "";
 			}
 			//if(nbookmark >= 0){
 			data[66] = nbookmark;
 			//}
-			
+
 		} catch(Exception e){
 			//System.out.println("New BookMark");
-			
+
 			data[40] = 200;	//ブックマークの数
 			BookMark = new String[data[40]];
 			BookMarkData = new int[data[40]*3];
@@ -5481,8 +5635,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//		data[66] = i + 1;
 		//	}
 		//}
+		Bugln("SettingLoad...Ok!\n");
 	}
-	
+
 	/**
 	 * ブックマークの保存
 	 * @param n
@@ -5495,10 +5650,10 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //			RecordStore.deleteRecordStore("Bookmark");
 		} catch(Exception e){
 		}
-*/		
+*/
 		try {
 			String str;
-			
+
 			System.gc();	//ガベージコレクション
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			RecordStore recordStore = RecordStore.openRecordStore("Bookmark", true);
@@ -5543,7 +5698,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			stat2 |= 0x0001000;
 		}
 	}
-	
+
 	/**
 	 * 設定の保存
 	 */
@@ -5555,7 +5710,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			ByteArrayOutputStream out2 = new ByteArrayOutputStream(500);
 			DataOutputStream out = new DataOutputStream( out2 );
 			//DataOutputStream out = new DataOutputStream( new ByteArrayOutputStream(500) );
-			
+
 			out.write(data[0] / 127);	//o  0 スレの一度に読み込む数
 			out.write(data[0] % 127);
 			out.write(data[1] / 127);	//o  1 レスの一度に読み込む数
@@ -5567,13 +5722,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			out.write(data[35]);		//o 35 １スクロールで移動する量
 			out.write(data[36]);		//o 36 文字のサイズ(0:小 1:中 2:大)
 			out.write(data[49]);		//o 49 その他設定(オートスクロール・秒表示)
-			
+
 			//WriteInt(out, data[47]);	//o 47 パケット代(合計)
 			out.writeInt(data[47]);
 			out.write(data[55] / 127);	//o 55 最新ﾚｽで読む数
 			out.write(data[55] % 127);
 			out.write(data[56]);		//o 56 ｽﾚ情報の表示		ｽﾚ一覧のﾒﾆｭｰ数
-			
+
 			if(server.substring(server.length() - 1).equals("/") == false){
 				server = server + "/";
 			}
@@ -5643,7 +5798,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			out.writeInt(0);
 
 			RecordStore recordStore = RecordStore.openRecordStore("Setting", true);
-			
+
 			//書き込み
 			b = out2.toByteArray();
 			if(recordStore.getNumRecords() == 0){
@@ -5666,7 +5821,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/**
 	 * 文字列を分割
 	 * @param str 対象文字列
-	 * @param ch 
+	 * @param ch
 	 * @return String
 	 */
 	public final String[] split( final String str, int ch){
@@ -5712,14 +5867,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				tfield = new LocalizedTextField("ｽﾚ･板のURL","",300,LocalizedTextField.ANY);
 				inputForm = new Form("URL指定");
 				inputForm.append(tfield);
-				
+
 				inputForm.addCommand(command[8]);
 				inputForm.addCommand(command[2]);
-						
+
 				inputForm.setCommandListener(this);
-					
+
 				disp.setCurrent(inputForm);
-				
+
 				stat3 |= 0x0001000;
 			break;
 			case 3:	//設定
@@ -5788,7 +5943,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				//	stat ^= 0x10000;	//ｽﾚ選択中解除
 					//stat |= 0x8000;	//スレ一覧ＤＬ中
 					strdata[8] = strdata[9];	//現在のタイトルを使用する
-					
+
 					stat |= 0x0008000;	//スレ一覧のリロード
 	//				i = data[5] - data[4] + 1;
 					//data[5] = i - 1;
@@ -5802,7 +5957,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			case 8:	//通信の詳細
 				viewcost();
 			break;
-			
+
 			case 9:	//ﾒﾆｭｰを閉じる
 				//backfromthreadlist();
 				stat &= ~0x0000100;	//ﾒﾆｭｰ解除
@@ -5831,7 +5986,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				addCommand(command[6]);//戻る
 				stat &= ~0x0000100;	//リストボックス解除
 			break;
-			
+
 			case 2:	//ﾚｽ番号　指定位置に移動　ﾚｽ番号を指定　ﾚｽ番指定
 				if((stat & 0x0000400) != 0){	//設定した後
 					setResnum(nCacheBrd[nCacheIndex]/*data[3]*/, nCacheTh[nCacheIndex][0]/*data[2]*/);
@@ -5844,7 +5999,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					setResnum(nCacheBrd[nCacheIndex], data[6] + nCacheSt[nCacheIndex]/*data[7]*/);
 				}
 			break;
-			
+
 			case 3:	//書き込み　書込&終了
 				if((data[57] & 0x00080000) != 0){if(bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}}
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
@@ -5854,16 +6009,16 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					httpinit(6, nCacheBrd[nCacheIndex]/*data[3]*/, 0, 0, 0);//dlbrdlist();
 				}
 			break;
-			case 4:	//ここにレス
-				bodytext = bodytext + ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";
-				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
-					viewwritepanel();
-				} else {
-					stat4 |= 0x0040000;
-					httpinit(6, nCacheBrd[nCacheIndex]/*data[3]*/, 0, 0, 0);//dlbrdlist();
-				}
-			break;
-			case 5:	//書込画面のURL
+			//case 4:	//ここにレス
+			//	bodytext = bodytext + ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";
+			//	if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
+			//		viewwritepanel();
+			//	} else {
+			//		stat4 |= 0x0040000;
+			//		httpinit(6, nCacheBrd[nCacheIndex]/*data[3]*/, 0, 0, 0);//dlbrdlist();
+			//	}
+			//break;
+			case 4:	//書込画面のURL
 				stat2 &= ~0x0004000;	//function解除
 
 				try{
@@ -5876,17 +6031,17 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					tbox.addCommand(command[2]);
 					stat3 |= 0x0004000;
 					tbox.setCommandListener(this);
-					disp.setCurrent(tbox);			
+					disp.setCurrent(tbox);
 				}
 				} catch(Exception e){
 					stat3 &= ~0x0004000;
 					disp.setCurrent(this);
 				}
 			break;
-			case 6:	//ﾌﾞｯｸﾏｰｸ
+			case 5:	//ﾌﾞｯｸﾏｰｸ
 				showBookMark(0);
 			break;
-			case 7:	//ﾌﾞｯｸﾏｰｸに登録
+			case 6:	//ﾌﾞｯｸﾏｰｸに登録
 				if(-1 == EditBookMark( 0, CacheTitle[nCacheIndex]/*strdata[9]*//*ThreadName[data[4]]*/, nCacheBrd[nCacheIndex]/*data[3]*/, nCacheTh[nCacheIndex][0]/*data[2]*//*nThread[data[4]]*/, data[6]+nCacheSt[nCacheIndex]/*data[7]*/)){
 					//strdata[7] = null;
 					//StrList[15] = new String[3];
@@ -5897,14 +6052,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					stat2 |= 0x0001000;
 				}
 			break;
-			
-			case 8:	//設定
+
+			case 7:	//設定
 				ListBox = StrList[4];
 				stat2 |= 0x0000001;	//設定
 				//data[19] = ListBox.length;
 				data[10] = 0;data[11] = 0;
 			break;
-			case 9:	//ﾃｷｽﾄﾎﾞｯｸｽ
+			case 8:	//ﾃｷｽﾄﾎﾞｯｸｽ
 				stat2 &= ~0x0004000;	//function解除
 
 				try{
@@ -5933,12 +6088,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}
 				stat |= 0x1000000;	//画面更新
 			break;
-			case 10:	//ﾃｷｽﾄﾎﾞｯｸｽ(URL)
+			case 9:	//ﾃｷｽﾄﾎﾞｯｸｽ(URL)
 				stat2 &= ~0x0004000;	//function解除
 				try{
 					if(data[60] != -1){
 						String buf = "";
-						
+
 						i = Linklist2[data[60]] % 1000;
 						j = Linklist[data[60]] / 1000;
 						if(j % 10000 != 0){i += iDivStr[j % 10000-1];}
@@ -5955,11 +6110,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					disp.setCurrent(this);
 				}
 			break;
-			
-			case 11:	//ｷｬｯｼｭｸﾘｱ
+
+			case 10:	//ｷｬｯｼｭｸﾘｱ
 				clearcache();
 			break;
-			case 12:	//AAS
+			case 11:	//AAS
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
 					//data[78] |= 0x0000400; //AAS
 					strdata[0] = strdata[1];
@@ -5970,12 +6125,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					bbsname = strdata[0].substring(it + 1);
 					strdata[0] = strdata[0].substring( 0, it);
 					String buf = "example.ddo.jp/aas/a.i/" + strdata[0] + "/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/" + (data[6] + nCacheSt[nCacheIndex]);
-						
-					openbrowser(buf,1);	
+
+					openbrowser(buf,1);
 				}else{
 					httpinit(6, nCacheBrd[nCacheIndex]/*data[3]*/, 0, 0, 0);//dlbrdlist();
 				}
-				
+
 			break;
 			/*case 12:   //ｽﾚｯﾄﾞの詳細
 				StrList[15] = new String[2];
@@ -5996,14 +6151,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					bbsname = strdata[0].substring(it + 1);
 					//strdata[0] = strdata[0].substring( 0, it);
 					String buf = "c.2ch.net/test/-/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/" + (data[6] + nCacheSt[nCacheIndex]) + "-";
-						
-					openbrowser(buf,1);	
+
+					openbrowser(buf,1);
 				}
 			break;*/
-			case 13:	//通信の詳細
+			case 12:	//通信の詳細
 				viewcost();
 			break;
-			case 14:	//ﾒﾆｭｰを閉じる
+			case 13:	//ﾒﾆｭｰを閉じる
 				stat ^= 0x0100;
 				addCommand(command[0]);
 				addCommand(command[6]);
@@ -6055,7 +6210,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					tbox.addCommand(command[2]);
 					stat3 |= 0x0004000;
 					tbox.setCommandListener(this);
-					disp.setCurrent(tbox);							
+					disp.setCurrent(tbox);
 				}
 			} catch(Exception e){
 				stat3 &= ~0x0004000;
@@ -6095,7 +6250,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else {
 					j = 0;	k = data[66];
 				}
-				
+
 				for(; j < k; j++){
 					buf2 = BookMark[j];
 					while(true){
@@ -6149,7 +6304,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		switch(i){
 			case 0:	//板ﾘｽﾄの更新,板ﾘｽﾄ更新
 				//Load();
-				
+
 				httpinit(0,0,0,0,0);//dlbrdlist();
 
 			break;
@@ -6180,7 +6335,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				//stat2 ^= 0x0000001;	//設定
 				stat2 |= 0x0000008;	//通信設定
 			break;
-			
+
 			case 5:	//その他
 				ListBox = StrList[8];
 				stat2 |= 0x0000020;	//その他
@@ -6258,7 +6413,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				StrList[15] = StrList[36];
 				stat2 ^= 0x0002000;
 				strdata[2] = StrList[5][i];
-				
+
 				stat2 |= 0x1000000;
 			}
 			break;
@@ -6289,7 +6444,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[57] &= ~0x00000070;
 				} else {
 					data[57] |= 0x00000010;
-					
+
 					if(data[28] >= 3){
 						data[57] |= 0x00000040;
 						data[28] -= 2;
@@ -6311,7 +6466,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				NumSet();
 //				if(i == 4){
 //				data[28] = data[56];	//初期値
-//				
+//
 //				data[26] = 9;	//上限
 //				} else {	//1:mona 2:nomal 3:mona+star 4:nomal+star
 				stat2 ^= 0x0002000;
@@ -6370,7 +6525,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 				} else {
 					if(i == 4){
-						data[57] &= ~0x00040000;						
+						data[57] &= ~0x00040000;
 					}else if(i == 5){	//時刻表示
 						data[57] &= ~0x00000008;
 					} else if(i == 6) {	//秒表示
@@ -6395,7 +6550,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				data[26] = 1;	//上限
 				data[27] = 0;	//桁
 				data[28] = 0;	//初期値
-				
+
 				if(i == 4){
 					if((data[57] & 0x00040000) != 0)
 						data[28] = 1;	//初期値
@@ -6423,7 +6578,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					 data[51] -= data[30] * 2;
 					 data[53] += data[30] + 5;
 					 stat2 |= 0x1000000;
-					 */									
+					 */
 				} else if(i == 11){
 					if(data[56] > 1){data[28] = 1;}
 				}
@@ -6441,7 +6596,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat2 &= ~0x0002000;
 			} else {
 				NumSet();
-				
+
 				stat2 ^= 0x0002000;
 				data[28] = data[97];
 				data[26] = 99999;	//上限
@@ -6455,7 +6610,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				strdata[2] = StrList[5][i];
 			}
 			break;
-			
+
 		case 13:	//戻る
 			stat2 ^= 0x0000002;
 			ListBox = StrList[4];
@@ -6508,7 +6663,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							data[28] = 2;	//初期値
 						}
 						data[29] = 0;	//桁数－１
-						
+
 						StrList[15] = StrList[32];
 	//					data[51] -= data[30] * 2;	data[53] += data[30] + 5;
 						stat2 |= 0x1000000;
@@ -6516,9 +6671,10 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					strdata[2] = StrList[6][i];
 				}
 				break;
-				
+
 			case 2:	//ｵｰﾄｽｸﾛｰﾙ
 			case 3:	//SO用ｽｸﾛｰﾙ処理
+			case 4://AAモード時に6.4キーで移動
 				if((stat & 0x0000400) != 0){	//設定した後
 					stat ^= 0x0000400;
 					stat2 ^= 0x0000200;	//１文字
@@ -6527,6 +6683,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							data[49] |= 0x01;
 						} else if(i == 3){
 							data[49] |= 0x20;
+						} else if(i == 4) {
+							data[49] |= 0x100;
 						}
 						//data[49] &= ~0x01;	//ｵｰﾄｽｸﾛｰﾙ
 					} else {
@@ -6534,6 +6692,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							data[49] &= ~0x01;
 						} else if(i == 3){
 							data[49] &= ~0x20;
+						} else if(i == 4) {
+							data[49] &= ~0x100;
 						}
 					}
 					//容量を稼ぐために消去
@@ -6554,6 +6714,10 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						}
 					} else if(i == 3){
 						if((data[49] & 0x20) != 0){
+							data[28] = 1;	//初期値
+						}
+					} else if(i == 4){
+						if((data[49] & 0x100) != 0){
 							data[28] = 1;	//初期値
 						}
 					}
@@ -6583,7 +6747,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					 stat2 |= 0x1000000;
 					 */							}
 				break;
-				case 4:	//戻る
+
+				case 5:	//戻る
 					stat2 ^= 0x0000004;
 					ListBox = StrList[4];
 					//data[19] = ListBox.length;
@@ -6610,7 +6775,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			case 1:	//累計のﾘｾｯﾄ
 				data[47] = 0;
 				//SaveSetting();
-				
+
 				strdata[7] = "ﾘｾｯﾄ完了";
 				stat2 |= 0x0001000;
 			break;
@@ -6644,7 +6809,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					} else if(i == 3){
 						data[26] = 999999;	//上限
 						data[29] = 5;	//選択出来る数字の上限の桁数-1
-						
+
 						data[28] = data[91];	//初期値
 						//strdata[7] = null;
 						/*StrList[15] = new String[3];
@@ -6665,7 +6830,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//				data[53] += data[30] + 5;
 					stat2 ^= 0x0002000;
 					strdata[2] = StrList[8][i];
-					
+
 					stat2 |= 0x1000000;
 				}
 			break;
@@ -6766,7 +6931,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					stat2 |= 0x1000000;
 				}
 			break;
-			
+
 			case 9:	//7ｷｰの機能(ｽﾚ覧)
 				stat4 |= 0x0000100;
 				ListBox = StrList[2];
@@ -6776,7 +6941,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//			strdata[7] = "機能を選択してください";
 	//			stat2 |= 0x0001000;
 			break;
-			
+
 			case 10:	//7ｷｰの機能(ﾌﾞｸﾏ覧)
 				stat4 |= 0x0000400;
 				ListBox = StrList[17];
@@ -6796,7 +6961,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//			strdata[7] = "機能を選択してください";
 	//			stat2 |= 0x0001000;
 			break;
-			
+
 			case 12:	//0ｷｰの機能
 				stat4 |= 0x0008000;
 				ListBox = StrList[37];
@@ -6806,7 +6971,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	//			strdata[7] = "機能を選択してください";
 	//			stat2 |= 0x0001000;
 			break;
-			
+
 			case 13:    //ｻｰﾊﾞｰ設定
 			case 14:    //拡張ｵﾌﾟｼｮﾝ
 			case 15:    //ｸｯｼｮﾝﾘﾝｸ
@@ -6838,7 +7003,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					inputForm.append(tfield);
 					inputForm.append(tfield2);
 				}else if(i == 18){
-					tfield = new LocalizedTextField("NGﾜｰﾄﾞ", ngword, 4096, LocalizedTextField.ANY);
+					tfield = new LocalizedTextField("NGﾜｰﾄﾞ", "未実装", 4096, LocalizedTextField.ANY);
 					stat4 |= 0x00020000;
 					inputForm.append(tfield);
 				}/* else {
@@ -6862,7 +7027,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 
 				}
 			break;
-			
+
 			case 20:
 				stat2 &= ~0x0004000;	//function解除
 
@@ -6873,7 +7038,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 					tbox = new LocalizedTextBox("ﾚｽ", buf, buf.length(), LocalizedTextField.ANY);*/
 					//System.out.println("\r\n\r\n-------" + resstr + "------\r\n\r\n");
-					tbox = new LocalizedTextBox("ﾊﾞｸﾞ報告", bagdata, bagdata.length() + 1, LocalizedTextField.ANY);
+					tbox = new LocalizedTextBox("ﾊﾞｸﾞ報告", bagdata.toString(), bagdata.length() + 1, LocalizedTextField.ANY);
 					//inputForm = new Form(StrList[3][i]);
 					//inputForm.addCommand(command[4]);
 					tbox.addCommand(command[2]);
@@ -6889,7 +7054,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}
 				stat |= 0x1000000;	//画面更新
 			break;
-			
+
 			/*case 18:	//ﾌﾞｯｸﾏｰｸ初期化
 				try {
 					RecordStore.deleteRecordStore("Bookmark");
@@ -6907,7 +7072,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				Load();
 				strdata[7] = "初期化完了";//StrList[10][11] + StrList[10][19];
 				stat2 |= 0x0001000;
-				
+
 			break;
 			case 22:	//メモリ情報	//ﾒﾓﾘﾏｯﾌﾟ
 			/*
@@ -7007,7 +7172,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				if(i == 2){
 					stat2 ^= 0x0002000;		//数字設定での最も低い数字を1にするフラグ
 					data[29] = 3;	//選択出来る数字の上限の桁数-1
-					
+
 					data[28] = data[55];	//初期値
 					/*StrList[15] = new String[4];
 					StrList[15][0] = "0を指定すると";
@@ -7038,7 +7203,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					//if((data[57] & 0x00000002) != 0){data[28] = 1;}
 					data[28] = data[87] & 0xFF;
 					data[26] = 5;	//上限
-					
+
 					/*StrList[15] = new String[5];
 					StrList[15][0] = "1:全部表示する";
 					StrList[15][1] = "2:AAのみ消去";
@@ -7053,9 +7218,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					//} else if((data[57] & 0x00000004) != 0){
 					//	data[28] = 1;
 					//}
-					
+
 					data[26] = 4;	//上限
-					
+
 					/*StrList[15] = new String[4];
 					StrList[15][0] = "1:全部表示する";
 					StrList[15][1] = "2:省略する";
@@ -7076,13 +7241,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		case 7:	//ﾒｱﾄﾞの表示
 		case 8:	//名前の表示
 			//i = data[10] + data[11];
-			
+
 			if((stat & 0x0000400) != 0){	//設定した後
 				stat ^= 0x0000400;
 				stat2 &= ~0x0000F00;
 				//if(i == 9){
 				//	data[28] = data[87];
-				//} else 
+				//} else
 				if(data[28] == 1){
 					if(i == 5){
 						data[49] |= 0x04;
@@ -7115,7 +7280,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					//	data[57] &= ~0x00004004;
 					}
 				}
-				
+
 //				data[51] = height / 2;
 //				data[53] = height / 2;
 				stat2 &= ~0x1000000;
@@ -7124,7 +7289,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				stat2 |= 0x0000200;	//１文字
 				data[26] = 1;	//上限
 				data[27] = 0;	//桁
-				
+
 				data[28] = 0;	//初期値
 				data[29] = 1;	//桁数－１
 				if(i == 5){
@@ -7141,7 +7306,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				StrList[14] = StrList[11];
 			}
 		break;
-		
+
 		case 11:	//戻る
 			stat2 ^= 0x0000008;
 			ListBox = StrList[4];
@@ -7151,7 +7316,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		break;
 		}
 	}
-	
+
 	/**
 	 * 0キーショートカット用の隠しメニュー
 	 * @param i 選択した箇所
@@ -7182,11 +7347,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			case 2://自動しおりONtoOFF
 				if((data[57] & 0x00000200) != 0){
 					data[57] ^= 0x00000200;
-					msgbox("自動しおりOFF");
+					strdata[7] = "自動しおりOFF";
 				}else{
 					data[57] |= 0x00000200;
-					msgbox("自動しおりON");
+					strdata[7] = "自動しおりON";
 				}
+				stat2 |= 0x0001000;
 			break;
 			case 3:
 				if( (stat & 0x40000) != 0 ){	//ﾚｽ表示時
@@ -7196,7 +7362,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						//StrList[15][0] = "= 登録失敗 =";
 						//StrList[15][1] = "ﾌﾞｯｸﾏｰｸがいっ";
 						//StrList[15][2] = "ぱいです。";
-						msgbox("登録失敗");
+						strdata[7] = "登録失敗";
 						stat2 |= 0x0001000;
 					}
 				}else if((stat & 0x0010000) != 0){//ｽﾚ表示時
@@ -7214,23 +7380,28 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					EditBookMark( 0,"[板]" + ListBox[data[10]+data[11]], ((data[22] + data[23]) * 100 + data[10] + data[11]), 0, 0);
 				}
 			break;
+			case 4:
+				httpinit(0,0,0,0,0);//dlbrdlist();
+			break;
 		}
 		stat |= 0x1000000;	//画面更新
 		stat4 ^= 0x0010000;
 	}
-	
+
 	/**
-	 * zuzuが追加したメッセージ表示用処理。現在は一カ所のみの使用
+	 * zuzuが追加したログ用処理。
 	 * @param text 表示したいテキスト。
 	 */
-	private final void msgbox(String text) {
-		if(text.indexOf("\n") == -1){
-			strdata[7] = text;
-		}else{
-			StrList[15] = split(text,'\n');
+	private final void Bugln(String text) {
+		if(bagdata.length() >= 4096 || bagdata.length() <= 0){
+			bagdata = null;
+			bagdata = new StringBuffer("");
+			bagdata.append("Connect:" + server + "\nVersion:" + version + "\n");
+			System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
 		}
-		stat2 |= 0x0001000;
-		//stat |= 0x1000000;	//画面更新
+		bagdata.append(text);
+		System.out.print(text);
 	}
+
 
 } //class MainCanvasの終わり
