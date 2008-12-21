@@ -6001,7 +6001,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			break;
 
 			case 3:	//‘‚«‚İ@‘&I—¹
-				if((data[57] & 0x00080000) != 0){if(bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}}
+				if((data[57] & 0x00080000) != 0){if(bodytext.indexOf(">>") <= 0 & bodytext.length() >= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}}
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
 					viewwritepanel();
 				} else {
