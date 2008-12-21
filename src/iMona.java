@@ -4409,7 +4409,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							} else {
 								Bugln("Writing=UnknownError!\n");
 								strdata[7] = "Œ´ˆö•s–¾‚Ì‘¸”s";
-								/*try{
+								try{
 									String buf;
 									buf = new String(dlarray);
 									tbox = new LocalizedTextBox("Œ´ˆö•s–¾‚È‘¸”s", buf.toString(), buf.length(), LocalizedTextField.ANY);
@@ -4418,7 +4418,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 									tbox.setCommandListener(parent.canv);
 									disp.setCurrent(tbox);
 								} catch(Exception e){
-								}*/
+								}
 								viewwritepanel();
 							}
 							//stat2 |= 0x0001000;
@@ -5310,6 +5310,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			StrList[15] = new String[2];
 			StrList[15][0] = "’v–½“I‚È´×°";
 			StrList[15][1] = e.toString();
+			Bugln("’v–½“I‚ÈƒGƒ‰[\n");
+			Bugln(e.toString() + "\n");
 			//bagdata = bagdata + "\r\n" + e.toString();
 			stat2 |= 0x0001000;
 		}
