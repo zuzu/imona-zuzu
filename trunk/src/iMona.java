@@ -2170,7 +2170,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 					if((stat4 & 0x0080000) != 0){
 						i = data[71];
-						
+						if(i != 1){
+							stat4 ^= 0x0080000;
+						}
 					}
 
 					strdata[8] = BookMark[j];
@@ -4024,6 +4026,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}
 			}
 		}
+		//font = Font.getFont(Font.FACE_SYSTEM,Font.STYLE_BOLD,Font.SIZE_SMALL);
+
 		data[30] = font.getHeight();
 		if(data[30] % 2 == 1){
 			data[30]++;
@@ -6023,7 +6027,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			break;
 
 			case 3:	//‘‚«ž‚Ý@‘ž&I—¹
-				if((data[57] & 0x00080000) != 0){if(bodytext.indexOf(">>") <= 0 & bodytext.length() >= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}}
+				if((data[57] & 0x00080000) != 0 && bodytext.indexOf(">>") <= 0 && bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
 					viewwritepanel();
 				} else {
