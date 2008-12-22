@@ -1978,6 +1978,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						
 						if(i2 == 1){
 							addCommand(command[2]);
+							//stat3 &= ~0x8000400;
+							ListBox = tBookMark;
+							data[10] = data[67];	data[11] = data[68];
 						} else {
 							//stat3 ^= 0x0000400;
 							stat3 &= ~0x8000400;
@@ -2203,12 +2206,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							//}
 						}
 					}
-					if((stat4 & 0x0080000) != 0){
+					/*if((stat4 & 0x0080000) != 0){
 						i = data[71];
 						if(i != 1 || i != 2 || i != 3){
 							stat4 ^= 0x0080000;
 						}
-					}
+					}*/
 
 					strdata[8] = BookMark[j];
 					bookmarkmenu(i,j);
