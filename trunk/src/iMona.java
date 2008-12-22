@@ -1947,6 +1947,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						showBookMark(1);
 						//stat3 |= 0x0000400;
 						stat |= 0x1000000;	//画面更新
+						wait(1);
 						
 						keyReleased(KEY_NUM5);
 						//addCommand(command[3]);
@@ -4120,8 +4121,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		if(mode % 10 == 2 && th == 0){mode -= 1;}
 		if((mode == 2 || mode == 12) && st > 0){
 			//現在見てるレスの中にジャンプ先があるとき
-			i_length = CacheTitle.length - 1;
-			for(i = i_length - 1;i >= 0;i--){	//キャッシュ内の検索
+			//i_length = CacheTitle.length - 1;
+			for(i = CacheTitle.length - 1;i >= 0;i--){	//キャッシュ内の検索
 //				#ifdef DEBUG
 //				System.out.println("CACHE:check" + i + "/" + CacheTitle.length + " /br" + nCacheBrd[i] + "/st" + nCacheSt[i] + "/to" + nCacheTo[i]);
 //				#endif
@@ -4163,8 +4164,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//}
 		//板を見たい場合のキャッシュ
 		} else if((mode == 1 || mode == 11) && (stat & 0x0008000) == 0/*再読込の時はキャッシュを使用しない*/) {
-			i_length = CacheTitle.length - 1;
-			for(i = i_length;i >= 0;i--){	//キャッシュ内の検索
+			//i_length = CacheTitle.length - 1;
+			for(i = CacheTitle.length - 1;i >= 0;i--){	//キャッシュ内の検索
 				if(nCacheTTL[i] >= 0 && CacheResData[i] == null && nCacheBrd[i] == brd
 				 && ( ((stat3 & 0x0000010) == 0 && nCacheSt[i] <= st && st <= nCacheTo[i])
 				 || ((stat3 & 0x0000010) != 0 && nCacheSt[i] <= to && to <= nCacheTo[i]) )){//キャッシュヒット
@@ -4786,6 +4787,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //#endif
 		int errorcode = 0;	//通信のエラーコード
 		//InputStreamからByteArrayOutputStreamへ入れ替え
+		
 		ByteArrayOutputStream outstr = new ByteArrayOutputStream();
 		try {
 			byte d1[] = new byte[1];
