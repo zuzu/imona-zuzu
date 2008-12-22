@@ -1795,6 +1795,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 10 - data[19];
 					stat |= 0x1000000;	//画面更新
+					StrList[17][2] = "書込";
 					Bugln("ﾌﾞｸﾏ覧\n");
 				} else if((stat4 & 0x0001000) != 0){	//7ｷｰの機能(ｽﾚ覧)設定後
 					stat4 ^= 0x0001000;
@@ -1933,6 +1934,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 			
 			if((stat2 & 0x0010000) != 0){//ﾌﾞｯｸﾏｰｸ
+				
 				if(/*BookMarkData[i * 3 + 1] == 0 && */BookMark[(data[10]+data[11])].length() == 0){	//スレ番号＝0　板が登録されているor空
 
 				}else{
@@ -1945,7 +1947,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						data[67] = data[10];	data[68] = data[11];
 						data[10] = 0;	data[11] = 0;
 						//showBookMark(1);
-						//stat3 |= 0x0000400;
+						stat3 |= 0x0000400;
 						//stat |= 0x1000000;	//画面更新
 						//wait(1);
 						
@@ -1979,18 +1981,20 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						if(i2 == 1){
 							addCommand(command[2]);
 							//stat3 &= ~0x8000400;
-							ListBox = tBookMark;
+							//ListBox = tBookMark;
 							data[10] = data[67];	data[11] = data[68];
 						} else {
 							//stat3 ^= 0x0000400;
-							stat3 &= ~0x8000400;
-							ListBox = tBookMark;
+							//stat3 &= ~0x8000400;
+							//ListBox = tBookMark;
 							data[10] = data[67];	data[11] = data[68];
 							addCommand(command[0]);
 							addCommand(command[3]);
 						}
+						stat2 &= ~0x0004000;	//function解除
 						stat |= 0x1000000;	//画面更新
 					}
+
 				}
 				
 			}
@@ -6068,7 +6072,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			break;
 
 			case 3:	//書き込み　書込&終了
-				if((data[57] & 0x00080000) != 0 && bodytext.indexOf(">>") <= 0 && bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}
+				if((data[57] & 0x00080000) != 0 & bodytext.indexOf(">>") <= 0 & bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
 					viewwritepanel();
 				} else {
@@ -7015,6 +7019,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				data[19] = data[10];
 				data[10] = data[71];
 				data[11] = 0;
+				StrList[17][2] = "(使用不可)";
 	//			strdata[7] = "機能を選択してください";
 	//			stat2 |= 0x0001000;
 			break;
