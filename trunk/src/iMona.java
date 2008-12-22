@@ -106,10 +106,10 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/** 検索文字列 */
 	String searchtext = "";
 	//
-	/** forなどの繰り返しを高速化するための一時変数 */
+	/** forなどの繰り返しを高速化するための一時変数。今は滅多に使わない */
 	int i_length; //forなどの繰り返し用の一時変数
 
-	/**　バグ報告の為に追加した変数。現在は使用していない。　*/
+	/**　バグ報告の為に追加した変数。　*/
 	StringBuffer bagdata = new StringBuffer("");
 	//過去の名前入力履歴
 	//String Namelist[] = new String[10];
@@ -1939,20 +1939,54 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					if(BookMarkData[(data[10]+data[11]) * 3 + 1] == 0){	//板
 						
 					}else{
-						stat4 |= 0x0080000;
-						//removeCommand(command[3]);
-						//removeCommand(command[0]);
-						//data[67] = data[10];	data[68] = data[11];
-						//data[10] = 0;	data[11] = 0;
-						showBookMark(1);
+						//stat4 |= 0x0080000;
+						removeCommand(command[3]);
+						removeCommand(command[0]);
+						data[67] = data[10];	data[68] = data[11];
+						data[10] = 0;	data[11] = 0;
+						//showBookMark(1);
 						//stat3 |= 0x0000400;
-						stat |= 0x1000000;	//画面更新
-						wait(1);
+						//stat |= 0x1000000;	//画面更新
+						//wait(1);
 						
-						keyReleased(KEY_NUM5);
+						//keyReleased(KEY_NUM5);
+						
 						//addCommand(command[3]);
 						//removeCommand(command[0]);
 						//addCommand(command[0]);
+						int j2 = data[67] + data[68];
+						int i2 = data[71];
+						
+						if((stat3 & 0x8000000) != 0){//ブックマークの特別メニュー表示
+							i2 += 7;
+						} else {
+							if(BookMarkData[j2 * 3 + 1] == 0) {	//スレ番号＝0　板が登録されているor空
+								//if(BookMark[j].equals("")/*BookMark[j].getBytes().length == 0*/){	//空
+									//if(i == 0){i = 5;}
+									//else{i += 6;}
+								//} else {	//板
+									//if(i == 0){i = 2;} else if(i == 1){i = 3;} else {i = 4;}
+									i2 += 4;
+								//}
+							}
+						}
+						if(i2 == 1){
+							stat4 |= 0x0080000;
+						}
+						
+						bookmarkmenu(i2,j2);
+						
+						if(i2 == 1){
+							addCommand(command[2]);
+						} else {
+							//stat3 ^= 0x0000400;
+							stat3 &= ~0x8000400;
+							ListBox = tBookMark;
+							data[10] = data[67];	data[11] = data[68];
+							addCommand(command[0]);
+							addCommand(command[3]);
+						}
+						stat |= 0x1000000;	//画面更新
 					}
 				}
 				
@@ -2171,7 +2205,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					}
 					if((stat4 & 0x0080000) != 0){
 						i = data[71];
-						if(i != 1){
+						if(i != 1 || i != 2 || i != 3){
 							stat4 ^= 0x0080000;
 						}
 					}
@@ -4822,6 +4856,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}
 				co.setRequestProperty("User-Agent",
 						"Monazilla/1.00");
+				cookie = "NAME=" + name + "; MAIL=" + mail + "; path=/";
+				//Cookie: NAME=名前; MAIL=メール; SPID(PON)=値; expires=有効期限; path=/
 				co.setRequestProperty("Cookie", 
 						cookie);
 				
