@@ -1176,6 +1176,9 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				mail = bres.getString();
 				bodytext = bboard.getString();
 				stat2 &= ~0x20000000;
+				if((stat4 & 0x0080000) != 0){
+					stat4 ^= 0x0080000;
+				}
 				disp.setCurrent(this);
 			} else if((stat3 & 0x2000000) != 0){	//ｴｸｽﾎﾟｰﾄ
 				stat3 &= ~0x2000000;
@@ -1187,14 +1190,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//setSoftLabel(Frame.SOFT_KEY_2, null);
 			if((stat4 & 0x0080000) != 0){
 				stat4 ^= 0x0080000;
-				showBookMark(0);
-				showBookMark(1);
-				showBookMark(0);
-				stat3 &= ~0x8000400;
-				ListBox = tBookMark;
-				data[10] = data[67];	data[11] = data[68];
-				addCommand(command[0]);
-				addCommand(command[3]);
+				keyPressed(KEY_NUM4);
 			}
 			stat |= 0x1000000;	//画面更新
 		}
@@ -1756,6 +1752,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					
 					if((stat & 0x0000400) != 0){	//設定した後
 						stat3 ^= 0x0000400;
+
 						i = data[67] + data[68];
 						strdata[8] = BookMark[i];
 						setResnum(BookMarkData[i * 3], BookMarkData[i * 3 + 1]);
@@ -1795,7 +1792,6 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					data[10] = data[19];
 					data[11] = 10 - data[19];
 					stat |= 0x1000000;	//画面更新
-					StrList[17][2] = "書込";
 					Bugln("ﾌﾞｸﾏ覧\n");
 				} else if((stat4 & 0x0001000) != 0){	//7ｷｰの機能(ｽﾚ覧)設定後
 					stat4 ^= 0x0001000;
@@ -1940,59 +1936,84 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}else{
 					if(BookMarkData[(data[10]+data[11]) * 3 + 1] == 0){	//板
 						
-					}else{
-						//stat4 |= 0x0080000;
-						removeCommand(command[3]);
-						removeCommand(command[0]);
-						data[67] = data[10];	data[68] = data[11];
-						data[10] = 0;	data[11] = 0;
-						//showBookMark(1);
-						stat3 |= 0x0000400;
+					}else{  //スレッド
+						stat4 |= 0x0080000;
+						if(data[71] == 2){//書き込み
+							data[67] = data[10];	data[68] = data[11];
+							//data[10] = 0;	data[11] = 0;
+							j = data[67] + data[68];
+							i = data[71];
+							strdata[8] = BookMark[j];
+							bookmarkmenu(i,j);
+							stat2 &= ~0x0004000;	//function解除
+							//showBookMark(1);
+							stat |= 0x1000000;	//画面更新
+						}else{
+							
+							removeCommand(command[3]);
+							removeCommand(command[0]);
+							//data[67] = data[10];	data[68] = data[11];
+							//data[10] = 0;	data[11] = 0;
+							//showBookMark(1);
+							//removeCommand(command[3]);
+							//removeCommand(command[0]);
+							//ListBox = StrList[17];
+							data[67] = data[10];	data[68] = data[11];
+							//data[10] = 0;	data[11] = 0;
+							stat3 |= 0x0000400;
+	
+							
+	
+							wait(100);
+							keyReleased(KEY_NUM5);
+						}
+						
+						
+						//stat3 |= 0x0000400;
 						//stat |= 0x1000000;	//画面更新
 						//wait(1);
 						
-						//keyReleased(KEY_NUM5);
-						
+
+						//data[71]
 						//addCommand(command[3]);
 						//removeCommand(command[0]);
 						//addCommand(command[0]);
-						int j2 = data[67] + data[68];
-						int i2 = data[71];
+/*						
+						stat &= ~0x0300000;//上下スクロールOFF
+						stat2 &= ~0x0C00000;//左右スクロールOFF
+						j = data[67] + data[68];
+						i = data[71];
+						k = 0;
 						
-						if((stat3 & 0x8000000) != 0){//ブックマークの特別メニュー表示
-							i2 += 7;
-						} else {
-							if(BookMarkData[j2 * 3 + 1] == 0) {	//スレ番号＝0　板が登録されているor空
-								//if(BookMark[j].equals("")/*BookMark[j].getBytes().length == 0*/){	//空
-									//if(i == 0){i = 5;}
-									//else{i += 6;}
-								//} else {	//板
-									//if(i == 0){i = 2;} else if(i == 1){i = 3;} else {i = 4;}
-									i2 += 4;
-								//}
-							}
-						}
-						if(i2 == 1){
+						if(i == 1 /*| i == 2){
 							stat4 |= 0x0080000;
-						}
+						}*/
+						/*strdata[8] = BookMark[j];
+						bookmarkmenu(i,j);*/
 						
-						bookmarkmenu(i2,j2);
-						
-						if(i2 == 1){
+						/*if(i == 1){
 							addCommand(command[2]);
 							//stat3 &= ~0x8000400;
 							//ListBox = tBookMark;
-							data[10] = data[67];	data[11] = data[68];
-						} else {
+							//data[10] = data[67];	data[11] = data[68];
+						// else if(i == 2){
 							//stat3 ^= 0x0000400;
 							//stat3 &= ~0x8000400;
 							//ListBox = tBookMark;
+							///data[10] = data[67];	data[11] = data[68];
+							//addCommand(command[0]);
+							//addCommand(command[3]);
+						} else {
+							//stat3 ^= 0x0000400;
+							stat3 &= ~0x8000400;
+							ListBox = tBookMark;
 							data[10] = data[67];	data[11] = data[68];
 							addCommand(command[0]);
 							addCommand(command[3]);
 						}
 						stat2 &= ~0x0004000;	//function解除
-						stat |= 0x1000000;	//画面更新
+						//showBookMark(1);
+						stat |= 0x1000000;	//画面更新*/
 					}
 
 				}
@@ -2037,8 +2058,8 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		}else if(keyCode == KEY_NUM0){ //0キーショートカット
 			orezimenu(data[74]);
 		}
-
 		thttpget();	//httpgetdata()を新規スレッドで動作
+		
 
 	}
 	/**
@@ -2210,12 +2231,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							//}
 						}
 					}
-					/*if((stat4 & 0x0080000) != 0){
+					if((stat4 & 0x0080000) != 0){
 						i = data[71];
-						if(i != 1 || i != 2 || i != 3){
+						if(i != 1 /*|| i != 2 || i != 3*/){
 							stat4 ^= 0x0080000;
 						}
-					}*/
+					}
 
 					strdata[8] = BookMark[j];
 					bookmarkmenu(i,j);
@@ -3051,12 +3072,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//data[12] = data[30] + 3;			//LIST Y座標
 			//data[13] = height - (data[30] + 3);	//LIST 縦幅
 		} else if((stat & 0x0040000) != 0){	//レスを見てたとき
+			
 			if((stat2 & 0x0020000) != 0){	//ブックマークからアクセスしてた場合(直接スレッドへのブックマーク)
 				stat2 &= ~0x0020000;
 				//data[77] = 0;
 				stat &= ~0x00040000;	//スレを見てるフラグを消去
 				showBookMark(0);
 			} else {	//スレ選択画面に戻る
+				zuzu[0] = 0; //レス番号指定を0にする。
 				int i = 1;
 				if(data[64] > 0){	//参照元がある場合
 					for(i = data[64];i > 0;i--){
@@ -3520,6 +3543,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			nCacheTTL[nCacheIndex] = 0;	//キャッシュを有効にする
 			//自動しおり機能
 			j = data[67] + data[68];
+			
 			if((data[57] & 0x00000200) != 0 && nCacheBrd[nCacheIndex]/*data[3]*/ == BookMarkData[j * 3] && nCacheTh[nCacheIndex][0]/*data[2]*/ == BookMarkData[j * 3 + 1]){
 				if(BookMarkData[j * 3 + 2] >= 0 && BookMarkData[j * 3 + 2] <= nCacheTo[nCacheIndex]/*data[8]*/){
 					BookMarkData[j * 3 + 2] = nCacheTo[nCacheIndex]/*data[8]*/ + 1;
@@ -4459,6 +4483,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							} else if((new String(dlarray)).indexOf("規約") != -1){
 								strdata[7] = "書込失敗(規約)";
 								Bugln("Writing=Kiyaku!\n");
+								Bugln(new String(dlarray),1);
 								viewwritepanel();
 							} else if((new String(dlarray)).indexOf("ＥＲＲＯＲ") != -1) {
 								String errortext;
@@ -4470,22 +4495,24 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 								strdata[7] = "書込失敗\n" + errortext.substring(start,end);
 								Bugln("Writing=Error!\n");
 								Bugln(errortext + "\n");
+								Bugln(new String(dlarray),1);
 								//strdata[7] = "書込失敗:" + errortext.substring(start,end);
 								viewwritepanel();
 							} else {
 								Bugln("Writing=UnknownError!\n");
 								strdata[7] = "原因不明の書込失敗";
 								try{
-									String buf;
+									/*String buf;
 									buf = new String(dlarray);
 									tbox = new LocalizedTextBox("原因不明な書込失敗", buf.toString(), buf.length(), LocalizedTextField.ANY);
 									tbox.addCommand(command[2]);
 									stat3 |= 0x0002000;
 									tbox.setCommandListener(parent.canv);
-									disp.setCurrent(tbox);
+									disp.setCurrent(tbox);*/
+									Bugln(new String(dlarray),1);
 								} catch(Exception e){
 								}
-								viewwritepanel();
+								//viewwritepanel();
 							}
 							//stat2 |= 0x0001000;
 						}/* else if(data[72] == 1){ //AAS
@@ -4855,19 +4882,21 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				if( (stat & 0x40000) != 0 ){	//ﾚｽ見てる時
 					Bugln("WritingReferer:" + "http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/\n");
 					co.setRequestProperty("Referer",
-							"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + nCacheTh[nCacheIndex][0] + "/");
+							"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + new Integer(nCacheTh[nCacheIndex][0]).toString() + "/");
 				} else if((stat2 & 0x0010000) != 0){	//ブックマーク
 					Bugln("WritingReferer:" + "http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + BookMarkData[(data[67] + data[68]) * 3 + 1] + "/\n");
 					co.setRequestProperty("Referer",
-							"http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + BookMarkData[(data[67] + data[68]) * 3 + 1] + "/");
+							 "http://" + strdata[0] + "/test/read.cgi/" + bbsname + "/" + new Integer(BookMarkData[(data[67] + data[68]) * 3 + 1]).toString() + "/");
+			
 				}
 				co.setRequestProperty("User-Agent",
-						"Monazilla/1.00");
-				cookie = "NAME=" + name + "; MAIL=" + mail + "; path=/";
+						"Monazilla/1.00 iMona-zuzu/1.0.x");
+				
+				
 				//Cookie: NAME=名前; MAIL=メール; SPID(PON)=値; expires=有効期限; path=/
 				co.setRequestProperty("Cookie", 
-						cookie);
-				
+						"NAME=" + com.j_phone.io.URLEncoder.encode(name) + "; MAIL=" + com.j_phone.io.URLEncoder.encode(mail) + "; " + com.j_phone.io.URLEncoder.encode(cookie));
+				Bugln("NAME=" + com.j_phone.io.URLEncoder.encode(name) + "; MAIL=" + com.j_phone.io.URLEncoder.encode(mail) + "; " + com.j_phone.io.URLEncoder.encode(cookie) + "\n");
 
 				/*if(strdata[0].indexOf("vip2ch.com") != -1){
 
@@ -4884,6 +4913,11 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			}
 //#ifdef
 			rc = co.getResponseCode();
+			if(co.getHeaderField("set-cookie") != null){
+				cookie = co.getHeaderField("set-cookie");
+				//Bugln(co.getHeaderField("set-cookie") + "\n");
+			}
+			
 //#endif
 			errorcode++;	//通信のエラーコード1
 			if((stat & 0x0080000) != 0 || rc >= 300){//通信ストップ要求orレスポンスコードが300以上
@@ -5128,10 +5162,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		//} catch(UnsupportedEncodingException e) {
 
 		} catch(Exception e) {
-			strdata[11] = e.toString();
+			allprintStackTrace(e);
+			strdata[11] =  e.toString();
 			try{
 				if(in != null){in.close();}
 				if(co != null){co.close();}
+			
+
 			} catch(Exception e2) {
 			}
 			//try{
@@ -5346,6 +5383,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				} else if( (stat2 & 0x0001000) == 0 ){	//まだ何も表示されていない場合
 					//strdata[7] = null;
 					Bugln("Error!\n");
+					
 					if(rc == 503){
 						StrList[15] = new String[3];
 						StrList[15][0] = "通信失敗";
@@ -5374,6 +5412,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				}
 			}
 		} catch(Exception e) {
+			allprintStackTrace(e);
 //				strdata[7] = "致命的なｴﾗｰ";
 			//strdata[7] = null;
 			StrList[15] = new String[2];
@@ -6240,7 +6279,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/**
 	 * ブックマークメニュー(レス)
 	 * @param i 選択した箇所
-	 * @param j　多分ブックマークの選択している箇所
+	 * @param j　ブックマークの選択している箇所
 	 */
 	public final void bookmarkmenu(int i, int j){ //ﾌﾞｯｸﾏｰｸﾒﾆｭｰ(ﾚｽ)
 		int k = 0;
@@ -7019,7 +7058,6 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 				data[19] = data[10];
 				data[10] = data[71];
 				data[11] = 0;
-				StrList[17][2] = "(使用不可)";
 	//			strdata[7] = "機能を選択してください";
 	//			stat2 |= 0x0001000;
 			break;
@@ -7474,6 +7512,25 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		bagdata.append(text);
 		System.out.print(text);
 	}
+	private final void Bugln(String text,int mode) {
+		if(bagdata.length() >= 4096 || bagdata.length() <= 0){
+			bagdata = null;
+			bagdata = new StringBuffer("");
+			bagdata.append("Connect:" + server + "\nVersion:" + version + "\n");
+			System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
+		}
+		
+		if(mode == 1){
+			//System.out.print(text);
+		}else{
+			bagdata.append(text);
+		}
+	}
+	private final void allprintStackTrace(Exception e) {
+		//e.printStackTrace();
+		//Bugln(System.out.toString() + "\n");
+	}
+	
 
 
 } //class MainCanvasの終わり
