@@ -33,7 +33,7 @@ import com.jblend.micro.lcdui.LocalizedTextField;
 
 /** iMona@zuzu
  * @author zuzu
- * @version  1.0.3
+ * @version  1.0.4
  */
 
 public final class iMona extends MIDlet {
@@ -76,7 +76,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/**	文字入力時に使用するform */
 	Form inputForm;
 	/**	バージョン用変数 */
-	String version = "1.0.3Xmas";
+	String version = "1.0.4Xmas";
 	/**	色々なところで使うテキストフィールド。日本語入力向けのLocalizedTextFieldを使用しています。 */
 	LocalizedTextField /*bname,*/ btitle, bres, bboard, bthread, tfield, tfield2;
 	/**	色々なところで使うテキストボックス。日本語入力向けのLocalizedTextBoxを使用しています。 */
@@ -1120,6 +1120,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 		} else if(c == command[2]){	//KEY_SOFT2	取消
 			///System.out.println("ST:CANCEL");
 			if((stat & 0x0000400) != 0){	//設定取り消し
+				zuzu[0] = 0;
 				stat &= ~0x0000400;//if((stat & 0x0000400) != 0){stat ^= 0x0000400;}
 
 				stat2 &= ~0x0000740;//下の4つを結合
@@ -1938,13 +1939,14 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						
 					}else{  //スレッド
 						stat4 |= 0x0080000;
+						data[67] = data[10];	data[68] = data[11];
 						if(data[71] == 2){//書き込み
-							data[67] = data[10];	data[68] = data[11];
+							
 							//data[10] = 0;	data[11] = 0;
 							j = data[67] + data[68];
-							i = data[71];
+							//i = data[71];
 							strdata[8] = BookMark[j];
-							bookmarkmenu(i,j);
+							bookmarkmenu(data[71],j);
 							stat2 &= ~0x0004000;	//function解除
 							//showBookMark(1);
 							stat |= 0x1000000;	//画面更新
@@ -1958,7 +1960,6 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							//removeCommand(command[3]);
 							//removeCommand(command[0]);
 							//ListBox = StrList[17];
-							data[67] = data[10];	data[68] = data[11];
 							//data[10] = 0;	data[11] = 0;
 							stat3 |= 0x0000400;
 	
@@ -3044,6 +3045,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 * まず間違いなくバグあり。
 	 */
 	public final void backfromfirst(){	//スレッド一覧のはじめまたはスレッドの>>1から(板一覧、スレッド一覧、ブックマーク)に戻る
+		zuzu[0] = 0; //レス番号指定を0にする。
 		if( (stat & 0x10000) != 0 ){	//ｽﾚ選択中の時
 			if((stat3 & 0x0000020) != 0/*(stat2 & 0x0020000) != 0*/){	//ブックマークからアクセスしてた場合
 				stat3 ^= 0x0000020;
@@ -3072,14 +3074,12 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			//data[12] = data[30] + 3;			//LIST Y座標
 			//data[13] = height - (data[30] + 3);	//LIST 縦幅
 		} else if((stat & 0x0040000) != 0){	//レスを見てたとき
-			
 			if((stat2 & 0x0020000) != 0){	//ブックマークからアクセスしてた場合(直接スレッドへのブックマーク)
 				stat2 &= ~0x0020000;
 				//data[77] = 0;
 				stat &= ~0x00040000;	//スレを見てるフラグを消去
 				showBookMark(0);
 			} else {	//スレ選択画面に戻る
-				zuzu[0] = 0; //レス番号指定を0にする。
 				int i = 1;
 				if(data[64] > 0){	//参照元がある場合
 					for(i = data[64];i > 0;i--){
@@ -3118,6 +3118,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	 */
 	public final void showBookMark(int mode){
 		if(mode == 0){	//ブックマークの表示
+			zuzu[0] = 0; //レス番号指定を0にする。
 			//if( (stat & 0x40000) != 0 ){
 			//removeCommand(command[0]);
 			removeCommand(command[6]);
@@ -5400,6 +5401,13 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							StrList[15][2] = strdata[11].substring(i+1);
 						}
 						Bugln("Message(" + errorcode + "):" + strdata[11] + "\n");
+						//showBookMark(1);
+						if((stat4 & 0x0080000) != 0){
+							stat4 ^= 0x0080000;
+							addCommand(command[0]);
+							addCommand(command[3]);
+
+						}
 					}
 					stat2 |= 0x0001000;
 				}
@@ -6111,7 +6119,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			break;
 
 			case 3:	//書き込み　書込&終了
-				if((data[57] & 0x00080000) != 0 & bodytext.indexOf(">>") <= 0 & bodytext.length() <= 5){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}
+				if((data[57] & 0x00080000) != 0 & /*bodytext.indexOf(">>") <= 0 &*/ bodytext.length() <= 0){bodytext = ">>" + Integer.toString(data[6] + nCacheSt[nCacheIndex]) + "\n";}
 				if(strdata[1] != null && data[79] == nCacheBrd[nCacheIndex]/*data[3]*/){
 					viewwritepanel();
 				} else {
@@ -7507,17 +7515,17 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			bagdata = null;
 			bagdata = new StringBuffer("");
 			bagdata.append("Connect:" + server + "\nVersion:" + version + "\n");
-			System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
+			//System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
 		}
 		bagdata.append(text);
-		System.out.print(text);
+		//System.out.print(text);
 	}
 	private final void Bugln(String text,int mode) {
 		if(bagdata.length() >= 4096 || bagdata.length() <= 0){
 			bagdata = null;
 			bagdata = new StringBuffer("");
 			bagdata.append("Connect:" + server + "\nVersion:" + version + "\n");
-			System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
+			//System.out.print("Connect:" + server + "\nVersion:" + version + "\n");
 		}
 		
 		if(mode == 1){
