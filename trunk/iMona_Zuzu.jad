@@ -1,9 +1,9 @@
 MIDlet-Name: iMona@zuzu
 MIDlet-Vendor: zuzu
-MIDlet-Version: 1.0.3
+MIDlet-Version: 1.0.4
 MIDlet-1: iMona@zuzu, , iMona
 MIDlet-Jar-URL: iMona_Zuzu.jar
-MIDlet-Jar-Size: 127402
+MIDlet-Jar-Size: 127919
 MIDlet-Application-Range: 0,0
 MIDlet-Copyright: Y
 MIDlet-Data-Size: 40000
