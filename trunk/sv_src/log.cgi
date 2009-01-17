@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 #ログ表示スクリプト
 
@@ -16,9 +16,7 @@ if(open(DATA, "./iMonaLog.txt")){
 	print "iappli: $log[1]<br>";
 	print "JAVAappli: $log[2]<br>";
 	print "others: $log[3]<br>";
-	$lastmodified = (stat "./iMonaLog.txt")[9];
-	$lasttime = localtime($lastmodified);
-	print "from $lasttime";
+	print "from 02/08/1?";
 	
 } else {
 	print "エラー<br>ログが消えたかもしれません。";

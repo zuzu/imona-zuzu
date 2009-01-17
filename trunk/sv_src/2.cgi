@@ -1,58 +1,15 @@
 #!/usr/local/bin/perl
+
 ###################################################################################################
 
 #
-# 2.cgi - ZuzuOriginal
+# 2.cgi
 #		// 2ch viewer for i¦Áppli,EZappli,Vappli
 #		// [charset:EUC-JP]
-#		// ¤³¤Î¥¹¥¯¥ê¥×¥È¤ÏEUC-JP¤òÁ°Äó¤È¤·¤Æ¤¤¤Þ¤¹¡£Â¾¤ÎÊ¸»ú¥³¡¼¥É¤ËÊÑ´¹¤¹¤ë¤ÈÀµ¾ï¤ËÆ°ºî¤·¤Þ¤»¤ó¡£
+#		// ¤³¤Î¥¹¥¯¥ê¥×¥È¤ÏEUC-JP¤òÁ°Äó¤È¤·¤Æ¤«¤«¤ì¤Æ¤¤¤Þ¤¹¡£Â¾¤ÎÊ¸»ú¥³¡¼¥É¤ËÊÑ´¹¤¹¤ë¤ÈÀµ¾ï¤ËÆ°ºî¤·¤Þ¤»¤ó¡£
 #
 
 ###################################################################################################
-
-
-BEGIN {	# ½é²óµ¯Æ°»þ¤Î¤ß
-	#use FCGI;
-
-	if(exists $ENV{MOD_PERL}){	# mod_perl¤ÇÆ°ºî¤·¤Æ¤¤¤ë¤È¤­
-		# ¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê¤òÊÑ¹¹¤¹¤ë
-		$cdir = $ENV{SCRIPT_FILENAME};
-		$cdir =~ s/\/[^\/]*$//;
-		chdir $cdir;
-
-		##/libraries/########################
-		require '2c.pl';
-		require Compress::Zlib;
-		####################################
-	}
-	
-	#if($fastcgi == 1){
-		##/libraries/########################
-	#	require '2c.pl';
-	#	require Compress::Zlib;
-		####################################
-
-	#}
-
-	##/ÀßÄêÉôÊ¬/########################
-	do 'setting.pl';
-	####################################
-	
-	##/libraries/########################
-	require "jcode.pl";
-	if($encodemod >= 1){	# Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
-		require Encode;
-		require Encode::JP::H2Z;
-		$sjis_enc = Encode::find_encoding("Shift-JIS");
-		$euc_enc = Encode::find_encoding("euc-jp");
-
-	}
-	if($encodemod >= 2){	# Drk::Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
-		require Drk::Encode;
-		$DrkEncode = Drk::Encode->new( ascii => 1 );
-	}
-	####################################
-}
 
 ## ÀßÄê ###########################################################################################
 $brd = 'brd.txt';				# ÈÄ¥Ç¡¼¥¿(board.cgi¤ÇºîÀ®¤·¤¿¤â¤Î)
@@ -69,13 +26,59 @@ $compw = 'compw.txt';			# Ã»½Ì¤¹¤ë¥­¡¼¥ï¡¼¥É
 
 $hostshitaraba = 'jbbs.livedoor.jp';	# ¤·¤¿¤é¤Ð¤Î¥Û¥¹¥È
 $hostmatibbs = 'machi.to';	# ¤Þ¤ÁBBS¤Î¥Û¥¹¥È
-$hostwaiwaikakiko = 'kakiko.com|[0-9]+\.kg';	#¤ï¤¤¤ï¤¤kakiko¤Î¥Û¥¹¥È
-
-$imonathread = 1171697443;				# iMona¥¹¥ì¥Ã¥É¤Î¥¹¥ìÈÖ¹æ
+$imonathread = 1099852332;				# iMona¥¹¥ì¥Ã¥É¤Î¥¹¥ìÈÖ¹æ
 ###################################################################################################
-$ver2cgi = '1.65';	# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Î¥Ð¡¼¥¸¥ç¥ó
+$ver2cgi = '1.66';	# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Î¥Ð¡¼¥¸¥ç¥ó
 ###################################################################################################
 
+BEGIN {	# ½é²óµ¯Æ°»þ¤Î¤ß
+
+	if(exists $ENV{MOD_PERL}){	# mod_perl¤ÇÆ°ºî¤·¤Æ¤¤¤ë¤È¤­
+		# ¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê¤òÊÑ¹¹¤¹¤ë
+		$cdir = $ENV{SCRIPT_FILENAME};
+		$cdir =~ s/\/[^\/]*$//;
+		chdir $cdir;
+
+		##/libraries/########################
+		require '2c.pl';
+		require Compress::Zlib;
+		####################################
+	}
+
+	##/ÀßÄêÉôÊ¬/########################
+	do 'setting.pl';
+	####################################
+	
+	##/libraries/########################
+	require "admgr.pl";
+	require "jcode.pl";
+	if($encodemod >= 1){	# Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
+		require Encode;
+		require Encode::JP::H2Z;
+	}
+	if($encodemod >= 2){	# Drk::Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
+		require Drk::Encode;
+		$DrkEncode = Drk::Encode->new( ascii => 1 );
+	}
+	####################################
+}
+
+if(exists $ENV{MOD_PERL}){	# mod_perl¤ÇÆ°ºî¤·¤Æ¤¤¤ë¤È¤­
+	# ÈÄ°ìÍ÷¤ò¥­¥ã¥Ã¥·¥å¤¹¤ë
+	if($#brd5cache_o < 0 || (stat("$brd5"))[9] != $brd5mtime_o){
+		@brd5cache_o = ();
+		if(open(DATA, "$brd5")){
+			binmode(DATA);
+			@brd5cache_o = <DATA>;
+			close(DATA);
+			for($i = 0; $i <= $#brd5cache_o; $i++){
+				$brd5cache_o[$i] =~ s/[\r\n]*$//;
+				@{$brd5splitcache[$i]} = split(/\t/, $brd5cache_o[$i]);
+			}
+		}
+		$brd5mtime_o = (stat("$brd5"))[9];
+	}
+}
 
 $output = '';
 
@@ -144,10 +147,12 @@ if($mode eq 'ver' || $mode eq 'modperl'){	# version mod_perl
 	if($encodemod >= 2){	# Drk::Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
 		print "using Drk::Encode module ver: $Drk::Encode::VERSION\n";
 	}
+	
+	print "< Package Name >\n";
+	print __PACKAGE__,"\n\n";
 
-	#exit;
+	exit;
 }
-
 
 
 if($log == 1){
@@ -189,6 +194,7 @@ $delaa = 0;	$delurl = 0;	$delret = 0;
 $compression = '';	$compressmode = 0;
 $deflate = 0;	$gzip = 0;	$zip = 0;	$nogzipheader = 0;	$encgzip = 0;	$sendpackedsize = 0;	$forcecompress = 0;
 $reduceerror = 0;
+$cushionpage = 1;	# ¥Ç¥Õ¥©¥ë¥È¤Ç¥¯¥Ã¥·¥ç¥ó¥ê¥ó¥¯¤ÏON¤È¤¹¤ë
 
 if($range =~ /t([0-9]*)/){$to = $1;}
 if($range =~ /l([0-9]*)/){$last = $1;}
@@ -233,11 +239,6 @@ if($option =~ m/f/){$forcecompress = 1;}
 if($option =~ m/r[^0-9].+$/){$reduceerror = 1;}
 
 if($range =~ /s([0-9]*)/){$start = $1;}
-
-#¥¯¥Ã¥·¥ç¥ó¥ê¥ó¥¯¥ª¥×¥·¥ç¥ó
-if($option =~ m/\/([0-9]+)([A-Z]+)/){$sp = $1;	$ext = $2; $cushionpage = 1;}#else{
-#	if($option =~ m/c([0-9]+)([A-Z]+)/){$sp = $1;	$ext = $2;}
-#}
 
 
 if($compressmode == 3){$compression = 'x';}
@@ -294,7 +295,7 @@ if($mode eq 'u'){	# URL¤ÇÉ½¼¨
 	if($url =~ /^(h?ttp\:\/\/[^\/]+)(\/.+)$/){
 		$userver = $1;
 		$upath = $2;
-		if($userver =~ /^h?ttp\:\/\/[0-9]+$/ || $userver =~ /[\.\/]2ch\.net/ || $userver =~ /[\.\/]bbspink\.com/ || $userver =~ /[\.\/]vip2ch\.com/ || $userver =~ /[\.\/]kakiko\.com/ || $userver =~ /[\.\/]machi\.to/ || $userver =~ /[\.\/]shiroro\.com/){	# 2ch¤ÎURL
+		if($userver =~ /^h?ttp\:\/\/[0-9]+$/ || &is2churl($userver)){	# 2ch¤ÎURL
 			if($upath =~ /\.html/){	# HTML²½ºÑ¤ß¤Î¥Õ¥¡¥¤¥ë¤Î¾ì¹ç
 				puterror('0');
 			}
@@ -309,6 +310,7 @@ if($mode eq 'u'){	# URL¤ÇÉ½¼¨
 				$upath =~ s|/([0-9]{9,10})/|/|;
 			}
 			$upath =~ s|//+|/|g;
+
 			if($userver =~ /^h?ttp\:\/\/([0-9]+)$/){	# http://ÈÄÈÖ¹æ/¥¹¥ìÈÖ¹æ/
 				$iboard = $1;
 				$str = &boradurl($iboard);
@@ -325,10 +327,9 @@ if($mode eq 'u'){	# URL¤ÇÉ½¼¨
 				}
 			} elsif($upath =~ /\/([A-Za-z0-9]{2,12})\// ){	# ÉáÄÌ¤ÎURL
 				$sboard = $1;	# ÈÄÌ¾¤ò¼èÆÀ
-				$iboard = url2nbrd('/' . $1 . '/',$userver);	# url¤«¤éÈÄÈÖ¹æ¤ò¼èÆÀ
-				#print $iboard;
+				$iboard = url2nbrd($userver . '/' . $1 . '/');	# url¤«¤éÈÄÈÖ¹æ¤ò¼èÆÀ
+				$iboard++;
 				$upath =~ s|/([A-Za-z0-9]{2,12})/|/|;
-
 				$str = &boradurl($iboard);	# ÈÄ¤ÎURL¤òºÆ¼èÆÀ
 				if($str =~ m|(http\://[^/]+)/(.+)/|){
 					$userver = $1;			# ÈÄ°ìÍ÷¤Ë¤¢¤ë¥µ¡¼¥Ð¡¼¤ò»ÈÍÑ¤¹¤ë(¸Å¤¤url¤òÁªÂò¤·¤¿»þ¤ËÈÄ¤ÎURL¤¬pc2¤Ø½ñ¤­´¹¤ï¤Ã¤Æ¤·¤Þ¤¦¤Î¤òËÉ¤°¤¿¤á)
@@ -386,7 +387,7 @@ if($mode eq 'u'){	# URL¤ÇÉ½¼¨
 	} else {
 		puterror('0');
 	}
-	#exit();
+	exit();
 	
 } else {
 	$str = &boradurl($iboard);
@@ -406,25 +407,19 @@ if($mode eq 'u'){	# URL¤ÇÉ½¼¨
 if($range eq '' && $nita == 0){$start=1;$to=10;}
 if($start != 0 && $last == 0 && $to == 0){$to = $start + 10;}
 
+$matibbs = 0;
+if($userver =~ /$hostmatibbs/){	# ¤Þ¤ÁBBS
+	$matibbs = 1;
+	require 'Mc.pl';
+	#$rawmode = 1;
+}
+
+
 $shitaraba = 0;
 if($userver =~ /$hostshitaraba/){	# ¤·¤¿¤é¤Ð
 	$shitaraba = 1;
 	#$rawmode = 1;
 }
-$matibbs = 0;
-if($userver =~ /$hostmatibbs/){	# ¤Þ¤ÁBBS
-	$matibbs = 1;
-	require 'Mb.pl';
-	#$rawmode = 1;
-}
-$waiwaikakiko = 0;
-if($userver =~ /$hostwaiwaikakiko/){	# ¤ï¤¤¤ï¤¤kakiko
-	$waiwaikakiko = 1;
-}
-
-
-
-
 
 
 if($rawmode == 1 || $shitaraba == 1){	# rawmode
@@ -442,14 +437,12 @@ if($rawmode == 1 || $shitaraba == 1){	# rawmode
 		}
 		if($shitaraba == 1){
 			$ran = "l$last";
-		} elsif($matibbs == 1){
-			$ran = "l".($last - 1);
-		}else {
+		} else {
 			$ran = "\&ls=$last";
 		}
 	} else {
 		if($mode eq 'm' && $start > 1){
-			if($shitaraba == 1 || $matibbs == 1){
+			if($shitaraba == 1){
 				if($start == 1){
 					$ran = "1-$to";
 				} else {
@@ -464,7 +457,7 @@ if($rawmode == 1 || $shitaraba == 1){	# rawmode
 				}
 			}
 		} else {
-			if($shitaraba == 1 || $matibbs == 1){
+			if($shitaraba == 1){
 				$ran = "$start-$to";
 			} else {
 				$ran = "\&st=$start\&to=$to";
@@ -476,7 +469,7 @@ if($rawmode == 1 || $shitaraba == 1){	# rawmode
 		$ran = '';
 	}
 } else {	# datÄ¾
-	if(!exists $ENV{MOD_PERL}){# || $fastcgi == 1){
+	if(!exists $ENV{MOD_PERL}){
 		require '2c.pl';
 	}
 
@@ -505,7 +498,7 @@ $putdatatype = 0;
 
 if($mode eq 'b'){		# ÈÄ°ìÍ÷¤Î¥À¥¦¥ó¥í¡¼¥É board
 	&boardlist();
-	#exit();
+	exit();
 } elsif($mode eq 'me'){	# ¥á¥Ë¥å¡¼¥À¥¦¥ó¥í¡¼¥É
 	&print_ua(1);
 
@@ -522,13 +515,12 @@ if($mode eq 'b'){		# ÈÄ°ìÍ÷¤Î¥À¥¦¥ó¥í¡¼¥É board
 			print length($buf) . "\n" . $buf;
 		}
 	}
-	#exit();
+	exit();
 }
 
 if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨or¥¹¥ì¥Ã¥É¸¡º÷orÇ¤°Õ¥¹¥ì¥Ã¥É¤ÎÇ¤°Õ¥ì¥¹¤òÉ½¼¨
 	if($iboard < 8000 && $userver eq ''){puterror('0');}
 
-	# ¤·¤¿¤é¤Ð¥µ¥Ý¡¼¥È
 	if($shitaraba == 1){
 		if($ithread == 0){	# ¥¹¥ì¥Ã¥É°ìÍ÷
 			$str = $userver . "/$sboard/subject.txt";
@@ -545,35 +537,17 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 			&jcode::convert(\$data, 'sjis' , 'euc'); # sjis¤ËÊÑ´¹
 			@data = split(/\n/, $data);
 			&filter_shitaraba_res();	# shitaraba to 2ch
-			&threadres();
+			&viewthread();
 		}
-	# ¤Þ¤ÁBBS
 	} elsif($matibbs == 1){
-#		if($ithread == 0){	# ¥¹¥ì¥Ã¥É°ìÍ÷
-#			$str = $userver . "/bbs/offlaw.cgi/$sboard/";
-#			$data = &http'get($str);
-#
-#			@data = split(/\n/, $data);
-#			&filter_matibbs();
-#			&threadlist();
-#		} else {
-#			$str = $userver . "/bbs/offlaw.cgi/$sboard/$ithread/$ran";
-#			$data = &http'get($str);
-
-#			@data = split(/\n/, $data);
-#			&filter_matibbs_res();	# matibbs to 2ch
-#			&threadres();
-#		}
-		$userver =~ s|http://||;
-		$data = &pMbbscache'read( $userver, $sboard, $ithread, $datst, $datto, $datls);
-		
-		@data = split(/\n/, $data);
-		if($data[0] =~ /LIST/){
+			$userver =~ s|http://||;
+			$data = &machibbs'read( $userver, $sboard, $ithread, $datst, $datto, $datls);
+			@data = split(/\n/, $data);
+			if($data[0] =~ /LIST/){
 				&threadlist();
 			} else {
-				&threadres();
-		}
-	# 2ch, 2ch¸ß´¹
+				&viewthread();
+			}
 	} elsif($iboard < 8000 || ($iboard >= 9000 && $iboard < 10000)){
 		if($rawmode == 1) {		#rawmode
 			if($ithread == 0){	# ¥¹¥ì¥Ã¥É°ìÍ÷
@@ -585,17 +559,14 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 				$str = $userver . "/test/read.cgi/$sboard/$ithread/\?raw=0.0$ran";
 				$data = &http'get($str);
 				@data = split(/\n/, $data);
-				&threadres();
+				&viewthread();
 			}
 		} else {				#datÄ¾ÆÉ¤ß
 			$userver =~ s|http://||;
 			$data = &p2chcache'read( $userver, $sboard, $ithread, $datst, $datto, $datls);
-			# be.2ch.net¥µ¡¼¥Ð¤Ïeuc¤Ê¤Î¤Çsjis¤ËÊÑ´¹¤¹¤ë
 			if($userver =~ /be\.2ch\.net/){
 				if($encodemod >= 1){	# Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
-					#Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
-					$data = $euc_enc->decode($data);
-					$data = $sjis_enc->encode($data);
+					Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
 				} else {
 					&jcode::convert(\$data, 'sjis' , 'euc');		# sjis¤ËÊÑ´¹
 				}
@@ -604,10 +575,9 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 			if($data[0] =~ /LIST/){
 				&threadlist();
 			} else {
-				&threadres();
+				&viewthread();
 			}
 		}
-	# ¥×¥é¥°¥¤¥ó (8000 <= $iboard && $iboard < 9000)
 	} else {
 		#$putdatatype = 1;
 		$pluginname = &getplugin($iboard);
@@ -627,7 +597,7 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 				$mode = 'm';
 			}
 			
-			&threadres();
+			&viewthread();
 		}
 	}
 } elsif($mode eq 'w2'){	# ¥¹¥ìÎ©¤Æ write
@@ -642,47 +612,41 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 #		print "Location: $str\n\n";
 #	} else {	# ½ñ¤­¹þ¤ß²èÌÌ¤Î½ÐÎÏ
 
-		print "Content-type: text/html;charset=Shift_JIS\n\n";
+		print "Content-type: text/html\n\n";
 		
 		#$str =~ m|(http://[^/]+)/([^/]+)/|;
-		#...ad...
-		require("../ads/ad.pl");
 
 		# ¥¹¥ì¥Ã¥É¥¿¥¤¥È¥ë¤Î½ÐÎÏ
 		if($rawmode == 0){
 			@data = split(/\n/, &p2chcache'read( $userver, $sboard, $ithread, 1, 1, 0));
 			print ((split(/<>/, $data[1]))[4] . "<br>");
 		}
-		
-		if ($imode == 1) {
-			if ( $userver =~ /sports2\.2ch\.net/ ) {
-				$buf = "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
-			} elsif ($userver =~ /[\.\/]2ch\.net/ || $userver =~ /[\.\/]bbspink\.com/) {
-				$buf = "<form method=post action=$userver/test/bbs.cgi?guid=ON>";
-			} else {
-				$buf = "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
-			}
-		} else {
-			$buf = "<form method=post action=$userver/test/bbs.cgi>";
-		}
-		$buf .= "Name<input name=FROM size=14><br>Mail<input name=mail size=14><br>Subject<input name=subject size=14><br><textarea name=MESSAGE cols=20></textarea><input type=submit name=submit value=\xBD\xDA\x97\xA7>";
-		if($kddi == 1){
-			$buf .= '<a href="device:jam?MIDlet-Name=iMona&MIDlet-Vendor=soft.spdv.net&MIDlet-Version=7.7.0&">iMona</a>';
-		}
 
-		$buf .= "<hr><input name=bbs value=$sboard><input name=time value=" . (time - 300)  . "><input type=hidden name=get value=1></form>";
-		
+		$buf = "";
+		$buf .= &getwriteformheader();
+		$buf .= "Name<input name=FROM size=14><br>Mail<input name=mail size=14><br>Subject<input name=subject size=14><br><textarea name=MESSAGE cols=20></textarea><input type=submit name=submit value=\xBD\xDA\x97\xA7>";
+		#if($kddi == 1){
+		#	$buf .= '<a href="device:jam?MIDlet-Name=iMona&MIDlet-Vendor=soft.spdv.net&MIDlet-Version=7.7.0&">iMona</a>';
+		#}
+
+		print $buf;
+
+		print "<br>";
+		&pAdManager'putAd("ad_text");
+
+		$buf = "<hr><input name=bbs value=$sboard><input name=time value=" . (time - 300)  . "><input type=hidden name=get value=1></form>";
+
 		print $buf;
 #	}
 
 } elsif($mode eq 'w'){	# ½ñ¤­¹þ¤ß write
-	&writelog();
+
 	# 0.73°Ê¹ß¤ò»ÈÍÑ¤·¤Æ¤¤¤ë¤È²¾Äê¤¹¤ë¡£
 	$brd2 = $brd4;
 	$brd3 = $brd5;
 
 	
-	if($ver eq '' || ($writemode == 0 && $rawmode == 1) || $writemode == 1 || $shitaraba == 1 || $matibbs == 1 || $waiwaikakiko == 1){	# ¥ê¥À¥¤¥ì¥¯¥È
+	if($ver eq '' || ($writemode == 0 && $rawmode == 1) || $writemode == 1 || $shitaraba == 1){	# ¥ê¥À¥¤¥ì¥¯¥È
 		#mod_perlÆ°ºî»þ¤Ëhttpd.conf¤ÇPerlSendHeader On¤Ë¤Ã¤Æ¤¤¤Ê¤¤¤È¤­¤ËHTTP¥Ø¥Ã¥À¤ò½ÐÎÏ¤¹¤ë
 		#if(exists $ENV{MOD_PERL} && (!$ENV{PERL_SEND_HEADER} || $ENV{PERL_SEND_HEADER} !~ /^On/i)){
 		#	print(($ENV{SERVER_PROTOCOL} || 'HTTP/1.0') . " 302 Found\r\n");
@@ -690,17 +654,12 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 
 		if($shitaraba == 1){
 			$str = $userver . "/bbs/i.cgi/$sboard/$ithread/w";
+		}elsif($userver !~ /machi\.to/ ){
+			$str = $userver . "http://same.u.la/test/post.so?SRV=$userver&BBS=$ithread&KEY=$sboard";
 		} else {
-			if($matibbs == 1){
-				$str = $userver . "/bbs/read.pl?IMODE=TRUE&KEY=$ithread&BBS=$sboard&WRITEBOX=TRUE";
-			}elsif($waiwaikakiko == 1){	# ¤Þ¤ÁBBS
-				$str = "http://same.u.la/test/post.so?SRV=$userver&BBS=$ithread&KEY=$sboard";
-			}else{
-				$str = &boradurl($iboard);
-				$str =~ s|(http\://[^/]+/)([^/]+)/|$1test/r.i/$2/$ithread/w|;
-			}
+			$str = &boradurl($iboard);
+			$str =~ s|(http\://[^/]+/)([^/]+)/|$1test/r.i/$2/$ithread/w|;
 		}
-		
 		#print "Location: $str\n\n";
 
 		# ¥Ð¡¼¥¸¥ç¥ó¤¬»ØÄê¤µ¤ì¤Æ¤¤¤Ê¤¤¤È¤­¤ËµìÈÄÈÖ¹æ¤Ç¥Á¥§¥Ã¥¯->r.i¤¬¤½¤ó¤Ê¥¹¥ì¤Ï¤Ê¤¤¤È¤¤¤¦¥¨¥é¡¼¤ò¤Ï¤¤¤¿¤é¿·ÈÄÈÖ¹æ¤ò»ÈÍÑ¤¹¤ë
@@ -715,7 +674,7 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 		#		$str =~ s|(http\://[^/]+/)([^/]+)/|$1test/r.i/$2/$ithread/w|;
 		#	}
 		#}
-
+		
 		print "Location: $str\n\n";
 	} else {	# ½ñ¤­¹þ¤ß²èÌÌ¤Î½ÐÎÏ
 		#mod_perlÆ°ºî»þ¤Ëhttpd.conf¤ÇPerlSendHeader On¤Ë¤Ã¤Æ¤¤¤Ê¤¤¤È¤­¤ËHTTP¥Ø¥Ã¥À¤ò½ÐÎÏ¤¹¤ë
@@ -723,43 +682,25 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
 		#	print(($ENV{SERVER_PROTOCOL} || 'HTTP/1.0') . " 200 OK\r\n");
 		#}
 
-		print "Content-type: text/html;charset=Shift_JIS\n\n";
+		print "Content-type: text/html\n\n";
 		
 		#$str =~ m|(http://[^/]+)/([^/]+)/|;
-		#...ad...
-		require("../ads/ad.pl");
+		&pAdManager'putAd("ad_text");
 
-	
 		# ¥¹¥ì¥Ã¥É¥¿¥¤¥È¥ë¤Î½ÐÎÏ
 		if($rawmode == 0){
 			@data = split(/\n/, &p2chcache'read( $userver, $sboard, $ithread, 1, 1, 0));
-			print ("<hr>".(split(/<>/, $data[1]))[4] ."<a href=http://i0.k2y.info/lr/lr.php?s=$userver&d=$sboard>\xDB\xB0\xB6\xD9\xD9\xB0\xD9</a>". "<br>");
+			print ((split(/<>/, $data[1]))[4] ."<a href=http://i0.k2y.info/lr/lr.php?s=$userver&d=$sboard>\xDB\xB0\xB6\xD9\xD9\xB0\xD9</a>". "<br>");
 		}
 		
-		$buf = "<hr>";
-		if ($imode == 1) {
-			if ( $userver =~ /sports2\.2ch\.net/ ) {
-				$buf .= "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
-			} elsif ($userver =~ /[\.\/]2ch\.net/ || $userver =~ /[\.\/]bbspink\.com/) {
-				$buf .= "<form method=post action=$userver/test/bbs.cgi?guid=ON>";
-			} else {
-				$buf .= "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
-			}
-		} else {
-			$buf .= "<form method=post action=$userver/test/bbs.cgi>";
-		}		
-		$buf .= "Name<input name=FROM size=14><br>Mail<input name=mail size=14 value=sage><br><textarea name=MESSAGE cols=16></textarea><input type=submit name=submit value=\x82\xA9\x82\xAB\x82\xB1\x82\xDE>";
-		if($kddi == 1){
-			$buf .= '<a href="device:jam?MIDlet-Name=iMona&MIDlet-Vendor=soft.spdv.net&MIDlet-Version=7.7.0&">iMona</a> ';
-		}
+		$buf = "";
+		$buf .= &getwriteformheader();
+		$buf .= "Name<input name=FROM size=14><br>Mail<input name=mail size=14 value=sage><br><textarea name=MESSAGE cols=16></textarea><input type=submit name=submit value=\x82\xA9\x82\xAB\x82\xB1\x82\xDE><br>";
+		#if($kddi == 1){
+		#	$buf .= '<a href="device:jam?MIDlet-Name=iMona&MIDlet-Vendor=soft.spdv.net&MIDlet-Version=7.7.0&">iMona</a> ';
+		#}
 
-		$buf .= "<br><a href=./2.cgi?v=D&m=w2&b=$iboard>\xBD\xDA\x97\xA7</a>";
-        if($userver =~ /[\.\/]bbspink\.com/){
-        	$buf .= " <a href=$userver/test/r.i/$sboard/$ithread/>r.i</a>";
-        }
-        else{
-        	$buf .= " <a href=http://c.2ch.net/test/-/$sboard/$ithread/i>c.2ch</a>";
-        }
+		$buf .= "<a href=./2.cgi?v=D&m=w2&b=$iboard>\xBD\xDA\x97\xA7</a> <a href=$userver/test/r.i/$sboard/$ithread/>r.i</a>";
         $userver2 = $userver;
 		$userver2 =~ s|http://||g;
         $buf .= " <a href=http://c2ch.net/orz/orz.cgi/-/$userver2/$sboard/$ithread/i>orz</a>";
@@ -768,22 +709,40 @@ if($mode eq 'u' || $mode eq 't' || $mode eq 's' || $mode eq 'm'){	# URL¤ÇÉ½¼¨or¥
         $title2 = $title;
 		$title =~ s/(\W)/'%' . unpack('H2', $1)/eg;
 		#$title =~ tr/ /%20/;
-
         $buf .= " 0.<a accesskey=0 href=http://i0.k2y.info/km/km.cgi?$title+$userver+$sboard+$ithread>\x8C\x67\x91\xD1\xD2\xC6\xAD\xB0</a>";
 
-        $buf .= "<hr><textarea>$title2\r\n$userver/test/read.cgi/$sboard/$ithread/</textarea>";
-
-		$buf .= "<hr><input name=key value=$ithread><input name=bbs value=$sboard><input name=time value=$ithread><input type=hidden name=get value=1></form>";
-
-		#$buf .= "<hr><input name=key value=$ithread><input name=bbs value=$sboard><input name=time value=$ithread><input type=hidden name=get value=1></form>";
 
 
-		
+		print "<br>";
+
 		print $buf;
-	}
 
+		#print "<br>";
+		#&pAdManager'putAd("ad_text");
+
+		$buf = "<hr><input name=key value=$ithread><input name=bbs value=$sboard><input name=time value=$ithread><input type=hidden name=get value=1></form>";
+
+		print $buf;
+
+	}
 }
-	#exit();
+
+exit();
+
+# ½ñ¤­¹þ¤ß¥Õ¥©¡¼¥à¤Îform¥¿¥°¤ò¼èÆÀ¤¹¤ë
+sub getwriteformheader {
+	if($imode == 1){
+		if($userver =~ /ex14\.vip2ch\.com/){ 
+			return "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
+		}elsif($userver !~ /sports2\.2ch\.net/ && &is2churl($userver)){# send guid
+			return "<form method=post action=$userver/test/bbs.cgi?guid=ON>";
+		}else {
+			return "<form method=post action=$userver/test/bbs.cgi?guid=ON utn>";
+		}
+	} else {
+		return "<form method=post action=$userver/test/bbs.cgi>";
+	}
+}
 
 # °ú¿ô¡§gzip°µ½Ì¤ò¹Ô¤ï¤Ê¤¤¤È¤­¤Ï1 content-type¤·¤«½ÐÎÏ¤·¤Ê¤¤¤È¤­¤Ï2
 sub print_ua {
@@ -796,9 +755,9 @@ sub print_ua {
 	
 	if($ENV{'HTTP_USER_AGENT'} =~ m/SoftBank/i){	# SoftBank
 		print "Content-type: application/Java\n";
-	} elsif($ENV{'HTTP_USER_AGENT'} =~ m|UNTRUSTED/\d\.\d|i || $ENV{'HTTP_USER_AGENT'} =~ m|Vodafone/.+? Java/|){	# Vodafone 3G
+	} elsif($ENV{'HTTP_USER_AGENT'} =~ m|UNTRUSTED/\d\.\d|i || $ENV{'HTTP_USER_AGENT'} =~ m|Vodafone/.+? Java/|){	#Vodafone 3G
 		print "Content-type: application/java\n";
-	} elsif($ENV{'HTTP_USER_AGENT'} =~ m/PHONE\/[4-9]\./i || $ENV{'HTTP_USER_AGENT'} eq ''){# jphone P4 P5 W
+	} elsif($ENV{'HTTP_USER_AGENT'} =~ m/PHONE\/[4-9]\./i || $ENV{'HTTP_USER_AGENT'} eq ''){#jphone P4 P5 W
 		print "Content-type: application/Java\n";
 	} elsif($ENV{'HTTP_USER_AGENT'} =~ m/PHONE\/3\./i){	# jphone C4
 		print "Content-type: text/vnd.sun.j2me.app-descriptor\n";
@@ -807,11 +766,7 @@ sub print_ua {
 	} elsif($ENV{'HTTP_USER_AGENT'} =~ m/KDDI/i){		# au
 		print "Content-type: application/octet-stream\n";
 	} else {
-		if($mode eq 'src'){	
-			print "Content-type: text/plain;charset=EUC-JP\n";
-		}else{
-			print "Content-type: text/plain\n";
-		}
+		print "Content-type: text/plain\n";
 	}
 
 	if($_[0] == 2){
@@ -848,19 +803,25 @@ sub print_ua {
 
 }
 
-sub ime {
-		my $ime;
-		$ime = $_[0];
-		
-		if($ime =~ /[\/\.]2ch\.net|[\/\.]bbspink\.com/){
-			return "$ime";
-		} else {
-			$ime =~ s/h?ttp\:\/\//http\:\/\/ime\.k2y\.info\/ime\.cgi\?/gi;
-			return "$ime";
-		}
+sub ime{
+	my $ime;
+	$ime = $_[0];
+	
+	if(&is2churl($ime)){
+		return "$ime";
+	} else {
+		$ime =~ s/#/\$/g;
+		$ime =~ s|h?ttp\://|http:\/\/imona\.zuzu\-service\.net\/ime\.php\?|gi;	# ime\.k2y\.info => j\.orz\.hm
+		return "$ime";
+	}
 }
 
-sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
+sub is2churl {
+	return 1 if $_[0] =~ /[\/\.]2ch\.net|[\/\.]bbspink\.com|ex14\.vip2ch\.com|[\.\/]kakiko\.com|[\.\/]machi\.to|[\.\/]shiroro\.com/;
+	0;
+}
+
+sub viewthread {	# ¥ì¥¹¤ÎÉ½¼¨
 
 	if($rawmode == 1 && $data[0] =~ /Res:1-3\/3/ && $data[1] =~ /<><>[0-9\/: ]+ ID:Happy2chLife<>/){	# ²áµî¥í¥°¹Ô¤­
 		if($ver >= 11){
@@ -871,7 +832,7 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 			return;
 		}
 	}
-	
+
 	$counter = 0;
 	$buf = '';	$buf2 = '';
 	$stname = '';
@@ -988,19 +949,16 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 		} elsif($delret == 2){
 			$str =~ s/\r/ /g;
 		}
-		
-		#¥Ð¥°ÂÐºö
-		#$str =~ s/((.*)<>){5}/$2/g;
-		
+
+		# ¥¯¥Ã¥·¥ç¥ó¥ê¥ó¥¯
 		if($cushionpage == 1){
-			$str =~ s/(h?ttps?:?[\x21-\x3B\x3D\x3F-\x7E]+)/&urlh($1)/eg;	#³ÈÄ¥¥ª¥×¥·¥ç¥ó¤Î£³(r3¡Ë¤¬¿·¤·¤¤µ¡Ç½¤Ë¤Ê¤ë¡£
+			$str =~ s/(h?ttps?:?[\x21-\x3B\x3D\x3F-\x7E]+)/&ime($1)/eg;
 		}
 		
 		@resbuf = split(/ ?\t ?/, $str);
 		#$resbli = $#resbuf;	# resbuf last index
 
 		if($shitaraba != 1 && @resbuf < 3){$local = 1;}
-		#if($matibbs != 1 && @resbuf < 3){$local = 1;}
 
 		if($local == 1 || ($iboard >= 9000 && $iboard < 10000)){		# local
 			if($resbuf[1] ne '' && $stname eq ''){	# °ìÈÖ»Ï¤á¤Î¥ì¥¹¤Î»þ
@@ -1033,10 +991,11 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 		if($delid == 1){
 			$resbuf[3] = '';
 		}
-		#ID¤Ë¤è¤ëµ¡¼ïÉ½¼¨
 		if($resbuf[3] =~ /^\s*\?+\s*$/){	#id¤¬???¤Ê¾ì¹ç
 			$resbuf[3] = '';				#id¤ò¾Ãµî
 		}
+		
+		#ID¤Ë¤è¤ëµ¡¼ïÉ½¼¨
 		if($iboard !~ /100/){
 			if(length($resbuf[3]) =~ /9/){
 				if($resbuf[3] =~ /[^0OPQoIi]$/){	              #id¤¬[0OPQo]°Ê³°¤Ê¾ì¹ç
@@ -1065,19 +1024,12 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 				}
 			}
 		}
-		#$resbuf[4] =~ s/(h?ttps?:?[\x21-\x3B\x3D\x3F-\x7E]+)/&urlh($1)/eg;
-		
-		#"¿À"º®ÆþÂÐºö
-		if($resbuf[2] =~ s/<a href\=\"http:\/\/2ch\.se\/\">(.+?)<\/a>//){
-			$resbuf[3] .= $1;
-		}
-		
-		
+
 
 		if($kddi == 1 &&$ver <= 15){		# 0.77¦Â°ÊÁ°¤Î¢÷É½¼¨ÉÔ¶ñ¹çÂÐºö
 			$resbuf[3] =~ s/\x81\xF5/ Ktai/;
 		}
-		
+
 		if($ver == 13){			# 0.76.1¤Îttp¥ê¥ó¥¯¥Ð¥°ÂÐºö
 			$resbuf[4] =~ s/^ttp/http/;
 		}
@@ -1149,7 +1101,7 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 			$resbuf[4] =~ s/  +/ /g;
 			$resbuf[4] =~ s/\r\r+/\r/g;
 			$resbuf[4] =~ s/ ([^\t ])/$1/g;
-			
+
 			#°Ê²¼¤ÏÉÔ´°Á´ÈÇ
 			#my(@resbuf) = split(/\t/, $str);
 			#$resbuf[4] =~ s/&gt;/>/g;
@@ -1253,14 +1205,13 @@ sub threadres {	# ¥ì¥¹¤ÎÉ½¼¨
 	&output;
 }
 
-#³¨Ê¸»úÊÑ´¹
 sub cnvemoji{
 	if($imode == 1){
 		$_[0] =~ s/&hearts;/\xF8\xEE/gi;
 	} elsif($kddi == 1){
 		$_[0] =~ s/&hearts;/\xF7\xB2/gi;
 	} else {#if($jphone == 1){
-		$_[0] =~ s/&hearts;/\xE0\x22/gi;	#ŽÊŽ°ŽÄ
+		$_[0] =~ s/&hearts;/(\xCA\xB0\xC4)/gi;	#ŽÊŽ°ŽÄ
 	}
 }
 
@@ -1387,7 +1338,7 @@ sub puterror{	#¥¨¥é¡¼¤ò¤Ï¤¤¤Æ½ªÎ»¡£°ú¿ô¤Ï¥¨¥é¡¼¥³¡¼¥É¡£
 		print "0\n";
 	}
 
-	#exit();
+	exit();
 }
 
 sub url2 {
@@ -1398,45 +1349,6 @@ sub url2 {
 		return "http://imona.2ch.net/$str";
 	}
 }
-
-#¥¯¥Ã¥·¥ç¥ó¥ê¥ó¥¯
-sub urlh {
-	my $url = $_[0];
-	$url =~ s/\#/\$/;
-	if($url =~ /[\/\.]2ch\.net|[\/\.]bbspink\.com|[\/\.]kakiko\.com|[\/\.]psychedance\.com|[\/\.]3ch\.jp|[\/\.]vip2ch\.com|[\/\.]k2y\.info|[\.\/]shiroro\.com|[\.\/]machi\.to/){
-		if($url !~ /sukima\.vip2ch\.com/){
-			return "$url";
-		}
-	}
-	$url =~ s/h?ttp:\/\//http:\/\//;
-	if($sp =~ /2/){
-		if($ext =~ /all/i){
-			$url =~ s/h?ttp:\/\///;
-			return "http://imona.zuzu-service.net/ime.php?$url";
-		}
-		if($ext =~ /ima/i){
-			if($url =~ /(\.?jpe?g|\.?png|\.?gif|\.?bmp)$/i){
-				$url =~ s/h?ttp:\/\///;
-				return "http://imona.zuzu-service.net/ime.php?$url";
-			}
-			return "$url";
-		}
-		if($ext == ""){
-			$url =~ s/h?ttp:\/\///;
-			return "$url";
-		}
-		if($url =~ /(\.?$ext)$/i){
-			$url =~ s/h?ttp:\/\///;
-			if($ext =~ /(html?)$/i){
-				return "http://imona.zuzu-service.net/ime.php?$url";
-			}
-			return "http://imona.zuzu-service.net/ime.php?$url";
-		}
-		return "$url";
-	}
-	return "$url";
-}
-
 
 sub url {
 	if($delurl == 3){	#´°Á´¾Ãµî
@@ -1529,9 +1441,7 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 		} else {
 			if($encodemod >= 1){	# Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
 				# euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
-				#Encode::from_to($str,'shiftjis', 'euc-jp');
-				$str = $sjis_enc->decode($str);
-				$str = $euc_enc->encode($str);
+				Encode::from_to($str,'shiftjis', 'euc-jp');
 				Encode::JP::H2Z::z2h(\$str);
 			} else {
 				&jcode::convert(\$str, 'euc' , 'sjis', 'h'); # euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
@@ -1552,9 +1462,7 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 		} else {
 			if($encodemod >= 1){	# Encode ¥â¥¸¥å¡¼¥ë¤ò»ÈÍÑ¤¹¤ë
 				# euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
-				#Encode::from_to($sword2,'shiftjis', 'euc-jp');
-				$sword2 = $sjis_enc->decode($sword2);
-				$sword2 = $euc_enc->encode($sword2);
+				Encode::from_to($sword2,'shiftjis', 'euc-jp');
 				Encode::JP::H2Z::z2h(\$sword2);
 			} else {
 				&jcode::convert(\$sword2, 'euc' , 'sjis', 'h'); # euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
@@ -1581,6 +1489,7 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 			#$i = 1;
 
 			if($sword ne ''){next;}
+
 			if($str =~ /Res:([0-9]*)\-([0-9]*)\/([0-9]*)/){	#»Ï¤á-½ª¤ï¤ê/Á´Éô¤Î¿ô
 				#$buf2 = "$1\t$2\t$3\n";
 				if($last == 0 && $start != $1){
@@ -1601,21 +1510,15 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 
 			if($sword ne ''){	#¸¡º÷
 				#$str2 = $str;
-
 				#if($str !~ m/$sword/i && $str !~ m/$sword2/i && $str !~ m/$sword3/i){next;}	#¸¡º÷ÍÑ
+
 				#&jcode'convert(*str2, 'euc' , 'sjis'); # euc¤ËÊÑ´¹
 				#&jcode'z2h_euc(*str2);  # Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
 				#&jcode'tr(*str2, '£°-£¹£Á-£Ú£á-£ú', '0-9A-ZA-Z');	# Á´³Ñ±Ñ¿ô»ú¤òÈ¾³Ñ±Ñ¿ô»úÂçÊ¸»ú¤ËÊÑ´¹¤¹¤ë
 				#&jcode'convert(*str2, 'sjis' , 'euc'); # sjis¤ËÊÑ´¹
-				#if($matibbs == 1){
-				#	foreach $sword2 (@sword){
-				#		if(index($data2[$i-1], $sword2) == -1){next thread;}	#¸¡º÷¥ï¡¼¥É¤¬¸«¤Ä¤«¤é¤Ê¤¤¤È¤­¤Ï¼¡¤Ø
-				#	}
-				#}else{
-					foreach $sword2 (@sword){
-						if(index($data2[$i], $sword2) == -1){next thread;}	#¸¡º÷¥ï¡¼¥É¤¬¸«¤Ä¤«¤é¤Ê¤¤¤È¤­¤Ï¼¡¤Ø
-					}
-				#}
+				foreach $sword2 (@sword){
+					if(index($data2[$i], $sword2) == -1){next thread;}	#¸¡º÷¥ï¡¼¥É¤¬¸«¤Ä¤«¤é¤Ê¤¤¤È¤­¤Ï¼¡¤Ø
+				}
 			}
 
 			#if($str =~ m/.dat<>/){
@@ -1623,9 +1526,6 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 
 			@tmp = split(/<>/, $str);
 
-			#if($matibbs == 1){
-			#	shift(@tmp);
-			#}
 			#if($str =~ /^(\w+)\.dat<>(.*) ?\((\w+)\)[\r\n]*$/){
 			if(@tmp => 2){
 				$tmp[0] =~ s/\.dat$//;
@@ -1656,7 +1556,6 @@ sub threadlist {# subject.txt -> rawmode¤ËÊÑ¹¹ºÑ¤ß
 			}
 		}
 	}
-	
 
 	if($buf eq ''){	#¥Ç¡¼¥¿¤¬²¿¤â¤Ê¤¤¾ì¹ç
 		if($sword ne '' && $ver >= 11){
@@ -1766,40 +1665,6 @@ sub to240_2{
 	return $ret;
 }
 
-#¥¢¥¯¥»¥¹¥«¥¦¥ó¥È
-sub writelog{
-	if(open(DATA, "+< writeLog.txt")){
-		binmode(DATA);
-		flock(DATA, 2);				# ¥í¥Ã¥¯³ÎÇ§¡£¥í¥Ã¥¯
-		
-		$line = <DATA>;
-		#close(DATA);
-		
-		@log = split(/\t/,$line);
-
-		if($kddi == 1){
-			$log[0]++;
-		} elsif($imode == 1){
-			$log[1]++;
-		} elsif($jphone == 1){
-			$log[2]++;
-		} elsif($other == 1){
-			$log[3]++;
-		}
-
-		#if(open(DATA, ">iMonaLog.txt")){
-			#binmode(DATA);
-		#truncate(OUT, 0);    # ¥Õ¥¡¥¤¥ë¥µ¥¤¥º¤ò0¥Ð¥¤¥È¤Ë¤¹¤ë
-		seek(DATA, 0, 0);			# ¥Õ¥¡¥¤¥ë¥Ý¥¤¥ó¥¿¤òÀèÆ¬¤Ë¥»¥Ã¥È
-		print DATA "$log[0]\t$log[1]\t$log[2]\t$log[3]";
-
-		close(DATA);
-		#}
-	}
-}
-
-
-
 sub log {
 	if(open(DATA, "+< iMonaLog.txt")){
 		binmode(DATA);
@@ -1891,14 +1756,9 @@ sub boardlist {	#ÈÄ¤ÎÉ½¼¨
 }
 
 sub url2nbrd{	#URL¤òÈÄÈÖ¹æ¤ËÊÑ´¹
-	my ($i, @line, @line2, $url);
+	my ($i, @line, @line2);
 	
-	#VIPURLDATÍî¤ÁÂÐºö
-	#if($_[0] == "news4vip"){
-	#	$_[0]
-	#}
-	$url = $_[1].$_[0];
-	if($#brd5cache < 0 || $ver < 11){
+	if($#brd5cache_o < 0 || $ver < 11){
 		if(open(DATA, "$brd3")){
 			binmode(DATA);
 			@line = <DATA>;
@@ -1907,19 +1767,16 @@ sub url2nbrd{	#URL¤òÈÄÈÖ¹æ¤ËÊÑ´¹
 			return -1;
 		}
 	} else {
-		@line = @brd5cache;
+		@line = @brd5cache_o;
 	}
-	
 	for($i = 0;$i <= $#line;$i++){
-		if($line[$i] =~ /^(.*?)$url/){
+		if($line[$i] =~ /^(.*?)$_[0]/){
 			@line2 = split(/\t/, $1);
-			if($line[$i] =~ /$_[1]/){
-				if($#line2 < 0){
-					return $i * 100;
-				} else {
-					#return $i * 100 + ($#line2 - 1);
-					return $i * 100 + ($#line2 + 1);
-				}
+			if($#line2 < 0){
+				return $i * 100;
+			} else {
+				#return $i * 100 + ($#line2 - 1);
+				return $i * 100 + $#line2;
 			}
 		}
 	}
@@ -1963,7 +1820,7 @@ sub boradurl {	#ÈÄ¤ÎÈÖ¹æ¤«¤éURL¤ò¼èÆÀ
 
 	$i = int($_[0] / 100);
 
-	if($#brd5cache < 0 || $ver < 11){
+	if($#brd5cache_o < 0 || $ver < 11){
 		if(open(DATA, "$brd3")){
 			binmode(DATA);
 			@line = <DATA>;
@@ -1981,7 +1838,7 @@ sub boradurl {	#ÈÄ¤ÎÈÖ¹æ¤«¤éURL¤ò¼èÆÀ
 			return $line[$i];
 		}
 	} else {	#ÈÄ°ìÍ÷¤¬¥­¥ã¥Ã¥·¥å¤µ¤ì¤Æ¤¤¤ë¾ì¹ç
-		@line = @brd5cache;
+		@line = @brd5cache_o;
 
 		return $brd5splitcache[$i][$_[0] - $i * 100];
 	}
@@ -2078,18 +1935,14 @@ sub compress {	#´Ê°×¥Ç¡¼¥¿°µ½Ì
 
 			if($ENV{'HTTP_USER_AGENT'} =~ m/P504i/){	#`->¡®ÊÑ´¹
 				# euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
-				#Encode::from_to($data,'shiftjis', 'euc-jp');
-				$data = $sjis_enc->decode($data);
-				$data = $euc_enc->encode($data);
+				Encode::from_to($data,'shiftjis', 'euc-jp');
 				Encode::JP::H2Z::z2h(\$data);
 
 				&jcode::tr(\$data, '`',"\x81\x4D");	#\x81\x4D = '¡®'(SJIS)
 				
 				&jcode::tr(\$data, '£°-£¹£Á-£Ú£á-£ú¡É¡ô¡ð¡ó¡õ¡Ç¡Ã¡ï¡°¡ª¡¡¡Ê¡Ë¡Ð¡Ñ¡Î¡Ï¡§¡¨¡Ü¡ö¡á¡ã¡ä¡©¡¿¡²¡÷¡Ý', '0-9A-Za-z"#$%&\'|\\^! (){}[]:;+*=<>?/_@-');
 
-				#Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
-				$data = $euc_enc->decode($data);
-				$data = $sjis_enc->encode($data);
+				Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
 			} else {
 				$data = $DrkEncode->z2h($data, "sjis");
 			}
@@ -2097,9 +1950,7 @@ sub compress {	#´Ê°×¥Ç¡¼¥¿°µ½Ì
 			$data = &replace_gaiji($data);
 			
 			# euc¤ËÊÑ´¹+Á´³Ñ¥«¥Ê¤òÈ¾³Ñ¥«¥Ê¤ËÊÑ´¹
-			#Encode::from_to($data,'shiftjis', 'euc-jp');
-			$data = $sjis_enc->decode($data);
-			$data = $euc_enc->encode($data);
+			Encode::from_to($data,'shiftjis', 'euc-jp');
 			Encode::JP::H2Z::z2h(\$data);
 
 			if($ENV{'HTTP_USER_AGENT'} =~ m/P504i/){	#`->¡®ÊÑ´¹
@@ -2108,9 +1959,7 @@ sub compress {	#´Ê°×¥Ç¡¼¥¿°µ½Ì
 
 			&jcode::tr(\$data, '£°-£¹£Á-£Ú£á-£ú¡É¡ô¡ð¡ó¡õ¡Ç¡Ã¡ï¡°¡ª¡¡¡Ê¡Ë¡Ð¡Ñ¡Î¡Ï¡§¡¨¡Ü¡ö¡á¡ã¡ä¡©¡¿¡²¡÷¡Ý', '0-9A-Za-z"#$%&\'|\\^! (){}[]:;+*=<>?/_@-');
 
-			#Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
-			$data = $euc_enc->decode($data);
-			$data = $sjis_enc->encode($data);
+			Encode::from_to($data,'euc-jp', 'shiftjis');	# sjis¤ËÊÑ´¹
 		} else {
 			$data = &replace_gaiji($data);
 
@@ -2296,7 +2145,7 @@ sub output {
 		print $output;
 	} else {
 		if($packmode == 1){				# zlib¤ò»ÈÍÑ¡£
-			if(!exists $ENV{MOD_PERL}){# || $fastcgi == 1){
+			if(!exists $ENV{MOD_PERL}){
 				require Compress::Zlib;
 			}
 			if($deflate == 1) {
@@ -2472,95 +2321,6 @@ sub filter_shitaraba_res {
 	#print "Content-type: text/plain\n\n\n";
 	#print "@data";
 }
-
-sub filter_matibbs {
-	my $i, $n, $mc;
-	@data2 = @data;
-	$mc = $#data;
-	@data = ();
-#	open(OUT,"> dabug.txt");
-	$data[0] = "Res:$start-$to/" . ($mc) . "\n";	# ¥Ø¥Ã¥À(Res:x-y/all)
-	$n = 1;
-#	print OUT $data[0];
-	if($sword eq ''){
-		for($i = $start-1; $i < $to; $i++){
-			#if($n == 1){
-				$data2[$i] =~ s/^[0-9]+?<>([0-9]{10})<>/$1.dat<>/;
-			#}else{
-			#	$data2[$i] =~ s/^[0-9]+?<>([0-9]{10})<>/\n$1.dat<>/;
-			#}
-			#$data2[$i] =~ s/^([0-9]+?)<>/$1.dat<>/;
-			$data2[$i] =~ s/\(([0-9]+?)\)$/ ($1)/;
-			#$data2[$i] =~ s/\r\n/\n/;
-			#print OUT $data2[$i];
-			$data[$n] = $data2[$i];
-			$n++;
-		}
-	}else{
-		for($i = 0; $i < $mc; $i++){
-			#if($n == 1){
-				$data2[$i] =~ s/^[0-9]+?<>([0-9]{10})<>/$1.dat<>/;
-			#}else{
-			#	$data2[$i] =~ s/^[0-9]+?<>([0-9]{10})<>/\n$1.dat<>/;
-			#}
-			#$data2[$i] =~ s/^([0-9]+?)<>/$1.dat<>/;
-			$data2[$i] =~ s/\(([0-9]+?)\)$/ ($1)/;
-			$data2[$i] =~ s/\r\n/\n/;
-			$data[$n] = $data2[$i];
-#			print OUT $data[$n];
-			$n++;
-		}
-	}
-#	close(OUT); 
-
-}
-
-sub filter_matibbs_res {
-	my $i, $j, $n, $title, $matist, $matito;
-	my @res;
-	@data2 = @data;
-	@data = ();
-	$title = "";
-	$shist = 0;	$shito = 0;
-
-	@res = split(/<>/, $data2[$#data2]);
-	if($last > 0){
-		if($res[0] - $last > 0){
-			$data[0] = "Res:" . ($res[0] - $last + 1) ."-$res[0]/$res[0]\n";	# ¥Ø¥Ã¥À(Res:x-y/all)
-			$matist = $res[0] - $last + 1;	$matito = $res[0];
-		} else {
-			$data[0] = "Res:1-$res[0]/$res[0]\n";								# ¥Ø¥Ã¥À(Res:x-y/all)
-			$matist = 1;	$matito = $res[0];
-		}
-	} else {
-		if($start == 1){
-			$data[0] = "Res:1-$res[0]/9999\n";									# ¥Ø¥Ã¥À(Res:x-y/all)
-			$matist = 1;	$matito = $res[0];
-		} else {
-			$data[0] = "Res:" . ($start-1) . "-$res[0]/9999\n";					# ¥Ø¥Ã¥À(Res:x-y/all)
-			$matist = $start-1;	$matito = $res[0];
-		}
-	}
-	$n = 1;
-	for($i = 0; $i <= $#data2; $i++){
-		@res = split(/<>/, $data2[$i]);
-		if($res[0] == 1){$title = $res[5];}
-		if($res[0] < $matist){next;}
-		if($res[0] > $matito){last;}
-		if($res[0] != $matist + $n - 1){											# ÈÖ¹æ¤¬Èô¤ó¤Ç¤¤¤ë¤È¤­
-			for($j = 0; $j < $res[0] - ($matist + $n - 1); $j++){
-				$data[$n] = "\x82\xA0\x82\xDA\x81\x5B\x82\xF1<><>???<><>";			# ¤¢¤Ü¡¼¤ó
-				$n++;
-			}
-		}
-		$data2[$i] =~ s/^[0-9]+?<>//;
-		$data[$n] = $data2[$i];
-		$n++;
-	}
-	#print "Content-type: text/plain\n\n\n";
-	#print "@data";
-}
-
 
 
 sub getplugin {

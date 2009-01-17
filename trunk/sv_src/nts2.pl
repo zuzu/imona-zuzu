@@ -25,7 +25,7 @@ BEGIN {	#初回起動時のみ
 	}
 	if($encodemod >= 2){	# Drk::Encode モジュールを使用する
 		require Drk::Encode;
-		$DrkEncode = Drk::Encode->new( ascii => 0 );
+		$DrkEncode = Drk::Encode->new( ascii => 1 );
 	}
 	require MeCab;
 	####################################
@@ -111,7 +111,7 @@ sub gethash {
 			} else {
 				$hash{$n->{surface}} = 6;
 			}
-		} elsif ($hinsi =~ /動詞/) {			# 動詞は2ポイント
+		} elsif ($hinsi =~ /動詞/) {							# 動詞は2ポイント
 			$hash{$n->{surface}} = 2;
 		}
 		

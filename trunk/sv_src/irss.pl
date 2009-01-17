@@ -23,6 +23,10 @@
 #	など適当に。
 #
 #【 更新履歴 】
+#	07/01/21 ver0.3
+#	・板の移転に対応
+#	06/07/15 ver0.2
+#	・転送量が多いのでgzip圧縮機能を追加
 #	06/05/03 ver0.1
 #	・初公開
 
@@ -30,12 +34,13 @@
 
 BEGIN {	# 初回起動時のみ
 	use XML::RSS;
+	use Compress::Zlib;
 	require '2c.pl';
+	require 'editbrd.pl';
 	
 	$maxres = 9999;	#最大レス読み込み数制限
 }
 
-print "Content-Type: text/xml\n\n";
 &read();
 
 exit();
@@ -97,6 +102,9 @@ sub read {
 			$op =~ s/f//;
 		}
 
+		# 板が移転している場合があるのでサーバをiMonaの保持している板リストから取得する
+		$server = &peditbrd'sbrd2server($board);
+
 		# 2ch またはキャッシュからデータの取得
 		$data = &p2chcache'read($server, $board, $ithread, $start, $to, $last, $op);
 		@data = split(/\n/, $data);
@@ -104,6 +112,7 @@ sub read {
 		# 出力
 		putresrss();
 	} else {	# 板の表示
+		# 未対応
 		#print $data;
 	}
 }
@@ -180,5 +189,19 @@ sub putresrss {
 
 		}
 	}
-	print $rss->as_string;
+
+	&output(\$rss->as_string);
+}
+
+# 出力
+sub output {
+	if ($ENV{HTTP_ACCEPT_ENCODING} =~ m/((?:x-)?gzip)/){	# gzip で圧縮
+		my $encoding = $1;
+
+		print "Content-Encoding: $encoding\n",
+				"Content-Type: text/xml\n\n",
+				Compress::Zlib::memGzip ${$_[0]};
+	} else {
+		print "Content-Type: text/xml\n\n", ${$_[0]};
+	}
 }
