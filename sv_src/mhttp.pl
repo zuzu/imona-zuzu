@@ -1,10 +1,11 @@
-# まちBBS専用HTTP通信ライブラリ
+
+# HTTP通信ライブラリ
 #         soft.spdv.net
 
 # これはhttpでデータを取得するための簡易ライブラリです。
 # gzipの展開、タイムアウト処理をサポートしています。
-#
-# まちBBSとのとの通信用に作成されたものなので、他のサーバでは動きません。
+# mod_perlでの使用時ではホストのダウン状態を保存しておきアクセスを強制遮断することでスロットの無駄使いを減らします。
+# 2chとの通信用に作成されたものなので、他のサーバーではうまく動かないかもしれません。
 
 #★使用方法
 # require 'http.pl';
@@ -37,15 +38,12 @@ $other = '';	#httpリクエストに任意のデータを追加する場合に使用します。
 
 $method = 'GET';
 
-####################################
-#print "Content-type: text/plain\n\n";
-#get("http://tokai.machi.to/bbs/offlaw.cgi/toukai/",1);
-sub get {	#HTTPでデータをダウンロードする。
-	my $i, $j, $n;
-	my @res;
-	my $title = "";
-	my $n = 1;
+$http_log = '';#'http_log.txt';	# 通信先のログ(空だと取らない)
 
+####################################
+
+
+sub get {	#HTTPでデータをダウンロードする。
 	$/ = "\x0A";	#改行コードを\x0A(LF)にする。
 
 	@header = ();
@@ -76,8 +74,13 @@ sub get {	#HTTPでデータをダウンロードする。
 #	}
 
 	if($ipaddress eq ''){
+		&founddown($host);
 		warn "ipaddress is NULL, host:[$host] url:[$_[0]]";
 		return;
+	}
+
+	if($http_log ne ''){
+		&print_http_log(time . " $_[0] [${range}-]\n");
 	}
 
 	#ポート番号とIPアドレスをセットした構造体を作る。 
@@ -112,7 +115,7 @@ sub get {	#HTTPでデータをダウンロードする。
 		}
 		print SOCKET "Accept: */*\r\n";
 		print SOCKET "Accept-Charset: *\r\n";
-		print SOCKET "Accept-Language: jp\r\n";
+		print SOCKET "Accept-Language: ja\r\n";
 		if($usegzip == 1){
 			print SOCKET "Accept-Encoding: gzip\r\n";
 		}
@@ -150,6 +153,17 @@ sub get {	#HTTPでデータをダウンロードする。
 	}
 
 	close (SOCKET);
+	
+	# バーボンハウス時はアクセスしない
+	if (index($line[0], " 403 ") >= 0) {
+		&founddown($host);
+	} elsif (index($line[0], " 302 ") >= 0) {
+		for (@line) {
+			if (m%/qb6.2ch.net/_403/%) {
+				&founddown($host);
+			}
+		}
+	}
 
 	#@data = ();
 	$ishead = 0;
@@ -163,9 +177,10 @@ sub get {	#HTTPでデータをダウンロードする。
 
 			push(@header, $line);
 
-			if($line =~ /\: gzip/){$gzip = 1;}	#gzipで圧縮されたデータが送られてきた場合
-			if($line =~ /Transfer-Encoding: chunked/){$chunked = 1;}
-
+			if (index($line, ": gzip") >= 0) {$gzip = 1;}	#gzipで圧縮されたデータが送られてきた場合
+			if (index($line, "Transfer-Encoding: chunked") >= 0) {
+				$chunked = 1;
+			}
 		} else {
 			if($chunked == 1 && $line =~ /^[0-9A-Fa-f]+[ \x0D\x0A]*$/){	#かなり適当な処理
 				$buffer =~ s/\x0D\x0A$//;
@@ -193,8 +208,8 @@ sub get {	#HTTPでデータをダウンロードする。
 				#chomp $line;
 				#$line .= "\n";
 			}
+
 			$buffer .= $line;
-			#print $line;
 			#if($gzip == 1){
 			#	$buffer .= $line;
 			#} else {
@@ -203,7 +218,7 @@ sub get {	#HTTPでデータをダウンロードする。
 			#}
 		}
 	}
-	#print $buffer;
+
 	if($gzip == 1){
 
 		#zlibを使用。
@@ -253,6 +268,9 @@ sub get {	#HTTPでデータをダウンロードする。
 			$| = 0;
 		}
 	}
+	
+	$buffer;
+	$buffer =~ s/(.+?)\n//;
 
 	return $buffer;
 	#return @data;
@@ -270,6 +288,18 @@ sub checkdown {
 		return -1;
 	}
 	return 0;
+}
+
+sub print_http_log {
+	if (open( HTTPLOG_RW, ">>$http_log")) {
+		if($win9x == 0){
+			flock(HTTPLOG_RW, 2);				# ロック確認。ロック
+		}
+		binmode(HTTPLOG_RW);
+
+		print HTTPLOG_RW $_[0];
+		close(HTTPLOG_RW);
+	}
 }
 
 1;

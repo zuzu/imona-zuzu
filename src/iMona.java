@@ -641,6 +641,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 	/**
 	 * iMona@zuzu専用変数保存領域
 	 * 0.レス番号指定の保存
+	 * 1.AAモード時には6,4キーでレス移動
 	 */
 	int zuzu[] = new int[10];
 
@@ -1610,7 +1611,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 //					data[85] = DivStr.length;
 				}
 			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0 ){	//ﾚｽｽｸﾛｰﾙ
-				if((stat2 & 0x0000080) != 0 && (data[49] & 0x100) != 0 && keyCode == KEY_NUM4){
+				if((stat2 & 0x0000080) != 0 && (zuzu[2] & 0x01) != 0 && keyCode == KEY_NUM4){
 							if( data[6] > 0 ){	//前のレスに戻る
 								data[6]--;
 								makeRes();
@@ -1669,7 +1670,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 					showBookMark(1);
 				}
 			} else if( (stat & 0x0440000) != 0 && (stat2 & 0x0000080) != 0){	//ﾚｽｽｸﾛｰﾙ&AAModeの場合
-				if((stat2 & 0x0000080) != 0 && (data[49] & 0x100) != 0 && keyCode == KEY_NUM6){
+				if((stat2 & 0x0000080) != 0 && (zuzu[2] & 0x01) != 0 && keyCode == KEY_NUM6){
 						if(data[6] < nCacheTo[nCacheIndex]/*data[8]*/ - nCacheSt[nCacheIndex]/*data[7]*/){	//次のレスに行く
 							data[6]++;
 							if(data[84] > 0 && data[6] + data[84] == nCacheTo[nCacheIndex] - nCacheSt[nCacheIndex] && nCacheTo[nCacheIndex] < nCacheAll[nCacheIndex]){
@@ -5599,6 +5600,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			data[71] = isp.readInt();	//o 71 7ｷｰの機能 for ﾌﾞｸﾏ
 			data[73] = isp.readInt();	//o 71 7ｷｰの機能 for ﾚｽ
 			data[74] = isp.readInt();	//o 71 0ｷｰの機能
+			zuzu[2] = isp.readInt() & 0xFF;	//o zuzu用追加オプション
 			//NGワード
 			/*i = isp.readByte() & 0xFF;
 			if(i > 0){
@@ -5904,6 +5906,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 			out.writeInt(data[71]);		//o 71 7ｷｰの機能　for ﾌﾞｸﾏ
 			out.writeInt(data[73]);		//o 73 7ｷｰの機能　for ｽﾚ
 			out.writeInt(data[74]);		//o 74 0ｷｰの機能
+			out.writeInt(zuzu[2]);
 			/*if(ngword.equals("")){
 				out.write(0x00);
 			} else {
@@ -6802,7 +6805,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						} else if(i == 3){
 							data[49] |= 0x20;
 						} else if(i == 4) {
-							data[49] |= 0x100;
+							zuzu[2] |= 0x01;
 						}
 						//data[49] &= ~0x01;	//ｵｰﾄｽｸﾛｰﾙ
 					} else {
@@ -6811,7 +6814,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 						} else if(i == 3){
 							data[49] &= ~0x20;
 						} else if(i == 4) {
-							data[49] &= ~0x100;
+							zuzu[2] &= ~0x01;
 						}
 					}
 					//容量を稼ぐために消去
@@ -6835,7 +6838,7 @@ final class mainCanvas extends Canvas implements Runnable,CommandListener {
 							data[28] = 1;	//初期値
 						}
 					} else if(i == 4){
-						if((data[49] & 0x100) != 0){
+						if((zuzu[2] & 0x01) != 0){
 							data[28] = 1;	//初期値
 						}
 					}

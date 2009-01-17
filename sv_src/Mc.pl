@@ -97,7 +97,7 @@
 #・バグ取り
 #03/03/02 ver1.0
 
-package p2chcache;
+package machibbs;
 
 #$ENV{'TZ'} = "JST-9";
 
@@ -111,10 +111,8 @@ BEGIN {	#初回起動時のみ
 	if(exists $ENV{MOD_PERL}){	#mod_perlで動作しているとき
 		require 'http.pl';
 	}
+	require 'mhttp.pl';
 
-	if($usenextthsearch == 1){
-		require 'nts2.pl';
-	}
 }
 
 if(caller() eq ''){	#requireで呼ばれたのではない場合
@@ -124,10 +122,11 @@ if(caller() eq ''){	#requireで呼ばれたのではない場合
 		print "Content-type: text/plain\n\n";
 		print &read($FORM{'host'}, $FORM{'bbs'}, $FORM{'th'}, $FORM{'st'}, $FORM{'to'}, $FORM{'ls'}, $FORM{'op'});
 	}
-	exit(0);
+	exit();
 }
 
 sub read {			# スレ一覧、スレッドの読み込み
+
 	$/ = "\x0A";	#改行コードを\x0A(LF)にする。
 
 	$rhost = $_[0], $rbbs = $_[1], $rth = $_[2], $rst = $_[3], $rto = $_[4], $rls = $_[5], $rop = $_[6];
@@ -168,27 +167,18 @@ sub read {			# スレ一覧、スレッドの読み込み
 RELOADBRD:
 				$_usebg20 = $usebg20;
 				if($rhost !~ /\.2ch\.net/) { $_usebg20 = 0; }
-				# bg20 を使用する場合
-				# bg20 は If-Modified-Since は使えない + 板移転時の挙動が異なる
-				if($_usebg20 == 1) {
-					my $url;
-					$url = $rhost;
-					$url =~ s|http://||;
-					$url = "http://chabe.appspot.com/$url/$rbbs/s/";
-					$str = &http'get($url);		#ダウンロード
-				} else {
-					$str = &http'get("$rhost/$rbbs/subject.txt");		#ダウンロード
-				}
-				if($_usebg20 != 1 && $http'header[0] =~ / 304 /){	#キャッシュを使用する(304 Not Modified)
+				$str = &mhttp'get("$rhost/bbs/offlaw.cgi/$rbbs/",1);		#ダウンロード
+
+				if($_usebg20 != 1 && $mhttp'header[0] =~ / 304 /){	#キャッシュを使用する(304 Not Modified)
 					$readcache = 1;
 				#板移転
 				# _usebg20 != 1 => 302 Found or (200 OK && len of $str < 100)
 				# _usebg20 == 1 => 200 OK && len of $str < 1000 && $str !~ /<>/
-				} elsif(($_usebg20 != 1 && $reload == 0 && ($http'header[0] =~ / 302 / || ($http'header[0] =~ / 20[0-9] / && length($str) <= 100))) ||
-						($_usebg20 == 1 && $reload == 0 && ($http'header[0] =~ / 20[0-9] / && length($str) <= 500 && $str =~ /ERROR . 5656/))
+				} elsif(($_usebg20 != 1 && $reload == 0 && ($mhttp'header[0] =~ / 302 / || ($mhttp'header[0] =~ / 20[0-9] / && length($str) <= 100))) ||
+						($_usebg20 == 1 && $reload == 0 && ($mhttp'header[0] =~ / 20[0-9] / && length($str) <= 500 && $str =~ /ERROR . 5656/))
 						)
 				{
-					foreach $str (@http'header) {
+					foreach $str (@mhttp'header) {
 						if($str =~ /^Location: .+\/_?403\//){	# 規制されていた時
 							#キャッシュを読むことにする
 							$readcache = 1;
@@ -217,7 +207,7 @@ RELOADBRD:
 							}
 						}
 					}
-				} elsif($http'header[0] =~ / 20[0-9] /){				#正常に取得できた場合
+				} elsif($mhttp'header[0] =~ / 20[0-9] /){				#正常に取得できた場合
 					if(!-e "$dir"){mkdir("$dir", $dirpermission);}	#ディレクトリがなければ作成する
 					if(!-e "$dir/$rbbs"){mkdir("$dir/$rbbs", $dirpermission);}	#ディレクトリがなければ作成する
 
@@ -227,7 +217,7 @@ RELOADBRD:
 					} else {
 						if(!-e "$dir/$rbbs/subject.txt"){&createfile("$dir/$rbbs/subject.txt");}			#ファイルがなければ作成する
 						seek(RW, 0, 0);			# ファイルポインタを先頭にセット
-						print RW getlastmodified(@http'header) . "\t" . ($#data + 1) . "\n" . $str;	#Last-Modified、データの行数
+						print RW getlastmodified(@mhttp'header) . "\t" . ($#data + 1) . "\n" . $str;	#Last-Modified、データの行数
 						truncate(RW, tell(RW));
 					}
 				} else {	#正常に取得できなかったときは保存しないで終了
@@ -336,6 +326,36 @@ RELOADBRD:
 				if($readcache == 0){	# 通常の場合(キャッシュデータからの差分読み込みをする場合)
 					# キャッシュの読み込み(データが更新されていなければここで読み込んだデータを転送する)
 					&getResCache();
+						$mop = "";
+						if(($#data + 1) != $data2[1] || $#data < 0){	# datに異常がある場合
+							$mhttp'other = '';							# If-Modified-Sinceの解除
+						} elsif($readdiff == 1){						# 差分読み込みを行う場合
+							$chkdat = $data[$#data];
+							$size -= length($chkdat);
+							if($rls > 0){
+								if($rls <= 2){
+									$rls = 3;
+								}
+								$mop = "l".($rls - 1);
+							} else {
+								if($rst > 1){
+									if($rst == 1){
+										$mop = "1-$rto";
+									} else {
+										$mop = ($rst-1) . "-$rto";
+									}
+								} else {
+									$mop = "$rst-$rto";
+								}
+							}
+							#if($size > 32){
+							#	$http'range = $size;
+							#	$_usegzip = $http'usegzip;				# usegzipの値を保存
+							#	$http'usegzip = 0;						# rangeを使用する時はgzipは使えないのでusegzipを無効にする
+							#} else {
+							#	$chkdat = '';
+							#}
+						}
 
 					if(($#data + 1) != $data2[1] || $#data < 0){	# datに異常がある場合はデータを取得しなおす
 						$http'other = '';							# If-Modified-Sinceの解除
@@ -345,8 +365,8 @@ RELOADBRD:
 						$size -= length($chkdat);
 						if($size > 32){
 							$http'range = $size;
-							$_usegzip = $http'usegzip;				# usegzipの値を保存
-							$http'usegzip = 0;						# rangeを使用する時はgzipは使えないのでusegzipを無効にする
+							$_usegzip = $mhttp'usegzip;				# usegzipの値を保存
+							$mhttp'usegzip = 0;						# rangeを使用する時はgzipは使えないのでusegzipを無効にする
 						} else {
 							# データサイズが小さすぎる場合は差分読み込みをキャンセルする
 							$chkdat = '';
@@ -358,36 +378,11 @@ RELOADBRD:
 				$_usebg20 = $usebg20;
 				if($rhost !~ /\.2ch\.net/) { $_usebg20 = 0; }
 RELOAD:
-				# 新規読み込みをする場合は bg20 経由で行う
-				if($_usebg20 == 1 && ($size < 1 || $readcache == -1)){
-					my $url;
-					$url = $rhost;
-					$url =~ s|http://||;
-					$url = "http://chabe.appspot.com/$url/$rbbs/$rth/";
-					$str = &http'get($url);		#ダウンロード
-					warn "[DEBUG] $_usebg20 $size $readcache url:$url" if $debug;
+				$str = &mhttp'get("$rhost/bbs/offlaw.cgi/$rbbs/$rth/$mop",0);		# ダウンロード
+				warn "[DEBUG] $_usebg20 $size $readcache url:$rhost/$rbbs/dat/$rth.dat" if $debug;
 
-					# bg20使用時は取得失敗したときに通常動作で再試行する
-					if($_usebg20 == 1){
-						my $tmp;
-						if($str eq ''){
-							$_usebg20 = 0;
-							goto RELOAD;
-						} else {
-							$tmp = substr($str, 0, 500);	$tmp =~ s/\n.*$//;
-							if($tmp =~ /r\.so/ && $tmp =~ /ERROR . 5656/){
-								$_usebg20 = 0;
-								goto RELOAD;
-							}
-						}
-					}
-				} else {
-					$str = &http'get("$rhost/$rbbs/dat/$rth.dat");		# ダウンロード
-					warn "[DEBUG] $_usebg20 $size $readcache url:$rhost/$rbbs/dat/$rth.dat" if $debug;
-				}
-
-				if($chkdat ne ''){$http'usegzip = $_usegzip;}		# usegzipの値を元に戻す
-				if($http'header[0] =~ / 20[0-9] /){					# 正常に取得できた場合
+				if($chkdat ne ''){$mhttp'usegzip = $_usegzip;}		# usegzipの値を元に戻す
+				if($mhttp'header[0] =~ / 20[0-9] /){					# 正常に取得できた場合
 					if($chkdat ne '' && substr($str, 0, length($chkdat)) ne $chkdat){	# DATが異常(あぼーんされている)
 						$chkdat = '';
 						$http'range = 0;
@@ -408,9 +403,9 @@ RELOAD:
 							@data = split(/(?<=\n)/, $str);
 						}
 
-						$whead = getlastmodified(@http'header) . "\t" . ($#data + 1) . "\n";	# Last-Modified、データの行数
+						$whead = getlastmodified(@mhttp'header) . "\t" . ($#data + 1) . "\n";	# Last-Modified、データの行数
 						# 新形式のヘッダ
-						$whead2 = sprintf("%s\t%04d\n", getlastmodified(@http'header), ($#data + 1));	# Last-Modified、データの行数
+						$whead2 = sprintf("%s\t%04d\n", getlastmodified(@mhttp'header), ($#data + 1));	# Last-Modified、データの行数
 						if(length($whead2) == $headsize){$whead = $whead2;}
 						
 						if($chkdat ne '' && length($whead) == $headsize){	# ヘッダのサイズが同じ場合追記する
@@ -448,12 +443,12 @@ RELOAD:
 							}
 						}
 					}
-				} elsif($http'header[0] =~ / 302 /){				# dat落ち(たぶん)
+				} elsif($mhttp'header[0] =~ / 302 /){				# dat落ち(たぶん)
 					if($#data < 0 || $#data < ($rst - 1)){			# キャッシュが存在しないor存在しても読み込む位置の方が先の場合
 						if($#data < 0 && -e "$dir/$rbbs/$rth.dat"){	# ファイルが存在する場合はそのファイルは壊れているので削除する
 							unlink("$dir/$rbbs/$rth.dat");
 						} else {
-							foreach $str (@http'header) {
+							foreach $str (@mhttp'header) {
 								if($str =~ /^Location: .+\/_?403\//){	# 規制されていた時
 									return &puterror(407);
 								}
@@ -463,9 +458,9 @@ RELOAD:
 					} else {
 						# キャッシュを読むことにする
 					}
-				} elsif($http'header[0] =~ / 304 /){				# キャッシュを使用する(304 Not Modified)
+				} elsif($mhttp'header[0] =~ / 304 /){				# キャッシュを使用する(304 Not Modified)
 					#キャッシュを読むことにする
-				} elsif($http'header[0] =~ / 416 /){				# DATに異常あり(あぼーんなど)(416 Requested Range Not Satisfiable)
+				} elsif($mhttp'header[0] =~ / 416 /){				# DATに異常あり(あぼーんなど)(416 Requested Range Not Satisfiable)
 					$chkdat = '';
 					$http'range = 0;
 					goto RELOAD;
@@ -529,35 +524,6 @@ RELOAD:
 		$buffer .= $data[$i];
 	}
 
-	# 次スレ検出機能(2chのみ有効)
-	if($to == 1001 && $rth != 0 && $usenextthsearch == 1 && ($rhost =~ /[\.\/]2ch\.net/ || $rhost =~ /[\.\/]bbspink\.com/)){
-		if($title eq ""){
-			$title = (split(/<>/, $data[0]))[4];
-		}
-		
-		$subjectbuf = "";
-		&openfile("$dir/$rbbs/subject.txt");
-		<RW>;	# ヘッダ
-		while(<RW>){$subjectbuf .= $_;}
-		close(RW);
-
-		$buffer2 = "";
-		$val = &pNextThreadSearch'getNearThreads($title, $rth, $subjectbuf);
-		for(0..4){
-			if(${$val}[$_] =~ /(\d+).dat<>(.+?)\s*\((\d+)\)\t(\d+)/){
-				# レス数が1001でないもののうち、ポイントが20以上
-				# もしくはタイトルの長さが短いものでポイントが10以上のもの
-				if( $3 != 1001 && ($4 >= 20 || ($_ <= 2 && length($title) < 15 && $4 >= 10)) ){
-					$buffer2 .= "$4pt:<a href=http://$rhost/$rbbs/$1/>$2</a><br>";
-				}
-			}
-		}
-		if($buffer2 ne ""){
-			$buffer =~ s/(<>[^<>]*?\n)$//;
-			$buffer .= "<br><br>iMonaNextThreadSEARCH<br>" . $buffer2 . $1;
-		}
-	}
-
 	return $buffer;
 }
 
@@ -598,13 +564,8 @@ sub check {	# 更新チェック
 }
 
 sub getdir {
-	if($rhost =~ /[\.\/]2ch\.net/ || $rhost =~ /[\.\/]bbspink\.com/){	#2ch
-		$dir = "$dat";
-	} elsif($rhost eq "local"){	#local
-		$dir = "$dat/public_dat";
-	} else {
-		$dir = "$dat/$rhost";
-	}
+		$dir = "$dat/public_html/machibbs";
+
 }
 
 sub getResCache {		# レスのキャッシュを読み込む
@@ -735,8 +696,5 @@ sub puterror {	#エラーの出力
 }
 
 
-if($mode == 2){
-	return 0;		#requireでの読み込みを拒否する
-} else {
-	return 1;
-}
+return 1;
+

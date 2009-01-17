@@ -41,6 +41,8 @@ foreach( $url as $_ ){
 	}
 }
 //実際の更新処理
+//の前に文字コード変換_SJIS->UTF8
+//$data = mb_convert_variables('UTF-8', 'SJIS', $data);
 foreach( $data as $_ ){
 	$_ = mb_convert_encoding($_, "UTF-8", "SJIS");
 	
@@ -78,7 +80,7 @@ foreach( $data as $_ ){
 				if($brdflexnum[1] >= 10){
 					$brdflex[$num] = $brdflex[$num].$brdflexnum[0].$brdflexnum[1]."\t";
 				}else{
-					$brdflex[$num] = $brdflex[$num].$brdflexnum[0]."0".$brdflexnum[1]."\t";
+					$brdflex[$num] = $brdflex[$num].$brdflexnum[0].'0'.$brdflexnum[1]."\t";
 				}
 			}elseif($brdflexnum[0] == 0){
 				$brdflex[$num] = $brdflex[$num].$brdflexnum[1]."\t";
@@ -86,7 +88,7 @@ foreach( $data as $_ ){
 				if($brdflexnum[1] >= 10){
 					$brdflex[$num] = $brdflex[$num].$brdflexnum[0].$brdflexnum[1]."\t";
 				}else{
-					$brdflex[$num] = $brdflex[$num].$brdflexnum[0]."0".$brdflexnum[1]."\t";
+					$brdflex[$num] = $brdflex[$num].$brdflexnum[0].'0'.$brdflexnum[1]."\t";
 				}
 			}
 			$brdflexnum[1] = $brdflexnum[1] + 1;
@@ -103,11 +105,22 @@ $brdflex[$num] = trim($brdflex[$num]);
 
 //保存処理&表示処理
 if($output){
-	echo "<hr><font color='green'># カテゴリや板の名前</font>";
+	echo mb_convert_encoding("<hr><font color='green'># カテゴリや板の名前</font>", "SJIS", "UTF-8");;
 	echo "<hr><pre>\n";
 }
+
 $fp = fopen($brd4path,"w");
 $fp2 = fopen($brdflexpath,"w");
+$brd4_toptext = implode("\n", $brd4_top);
+$brd4_toptext = mb_convert_encoding($brd4_toptext, 'SJIS', 'UTF-8');
+if($output){
+	echo $brd4_toptext;
+}
+fwrite($fp,$brd4_toptext);
+fwrite($fp2,$brd4_toptext);
+/*unset $brd4_toptext;
+unset $brd4_top;*/
+/*
 foreach( $brd4_top as $_ ){
 	if($output){
 		echo "$_\n";
@@ -118,13 +131,37 @@ foreach( $brd4_top as $_ ){
 }
 if($output){
 	echo "\n";
-}
-fwrite($fp,"\n");
-fwrite($fp2,"\n");
+}*/
+fwrite($fp,"\n\n");
+fwrite($fp2,"\n\n");
 $count = -1;
+
+//$brd4_under = mb_convert_variables('SJIS', 'UTF-8', $brd4_under);
+$brd4_undertext = implode("", $brd4_under);
+$brd4_undertext = mb_convert_encoding($brd4_undertext, 'SJIS', 'UTF-8');
+fwrite($fp,$brd4_undertext);
+fclose($fp);
+if($output){
+	echo "<br><br>";
+	echo $brd4_undertext;
+}
+//unset $brd4_undertext;
+
+foreach( $brd4_under as $_ ){
+	$_ = mb_convert_encoding($_, "SJIS", "UTF-8");
+	if( !strpos($_,"\n") ) {
+		fwrite($fp2,$_."\n");
+	}else{
+		fwrite($fp2,$_);
+	}
+	fwrite($fp2,$brdflex[$count]);
+	$count = $count + 1;
+}
+fclose($fp2);
+/*
 foreach( $brd4_under as $_ ){
 	if($output){
-		echo "$_";
+		echo $_;
 	}
 	$_ = mb_convert_encoding($_, "SJIS", "UTF-8");
 	fwrite($fp,$_);
@@ -137,21 +174,29 @@ foreach( $brd4_under as $_ ){
 	$count = $count + 1;
 }
 fclose($fp2);
-fclose($fp);
+*/
 
 if($output){
 	echo "</pre>\n";
-	echo "<hr><font color='green'># 板番号－＞URL変換用</font>";
+	echo mb_convert_encoding("<hr><font color='green'># 板番号－＞URL変換用</font>", "SJIS", "UTF-8");;
 	echo "<hr><pre>\n";
 }
+
 $fp = fopen($brd5path,"w");
+$brd5text = implode("", $brd5);
+$brd5text = mb_convert_encoding($brd5text, "SJIS", "UTF-8");
+if($output){
+	echo $brd5text;
+}
+fwrite($fp,$brd5text);
+/*
 foreach( $brd5 as $_ ){
 	if($output){
 		echo "$_";
 	}
 	$_ = mb_convert_encoding($_, "SJIS", "UTF-8");
 	fwrite($fp,"$_");
-}
+}*/
 fclose($fp);
 if($output){
 	echo "</pre><hr>\n";
